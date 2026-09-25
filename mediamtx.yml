@@ -1,0 +1,37 @@
+# MediaMTX Configuration for SmartCare RBATPM
+# This file is mounted into the MediaMTX Docker container.
+# It defines how RTSP camera streams are ingested and served via WebRTC.
+
+###############################################
+# General settings
+###############################################
+
+# Log level (debug, info, warn, error)
+logLevel: info
+
+###############################################
+# RTSP server settings
+###############################################
+rtspAddress: :8554
+
+###############################################
+# WebRTC server settings
+###############################################
+webrtcAddress: :8889
+
+###############################################
+# Stream paths
+# Each path pulls an RTSP source and re-publishes it.
+# WebRTC access: http://<host>:8889/<path_name>/
+# NOTE: The '@' in passwords MUST be URL-encoded as %40
+###############################################
+paths:
+  cam1:
+    source: "rtsp://admin:Admin%401962@192.168.0.101/Streaming/Channels/101"
+    rtspTransport: tcp
+    sourceOnDemand: yes
+  cam3:
+    source: "rtsp://admin:Admin%4012345@192.168.0.112/Streaming/Channels/101"
+    rtspTransport: tcp
+    sourceOnDemand: yes
+

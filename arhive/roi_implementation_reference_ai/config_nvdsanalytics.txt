@@ -1,0 +1,25 @@
+[line-crossing-stream-0]
+enable = 1
+mode = loose
+class-id = 0
+extended = 0
+line-crossing-road_line_1 = 620;126;871;82;707;79;814;151
+
+[property]
+enable = 1
+config-width = 1280
+config-height = 720
+osd-mode = 2
+display-font-size = 16
+
+[roi-filtering-stream-0]
+enable = 1
+inverse-roi = 0
+class-id = 0
+roi-road_roi_1 = 719;207;931;143;1089;251;879;354
+
+[roi-filtering-stream-1]
+enable = 1
+inverse-roi = 0
+class-id = 0
+roi-left_Wall = 219;654;226;710;444;691;403;614

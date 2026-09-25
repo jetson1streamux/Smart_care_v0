@@ -1,0 +1,142 @@
+# =============================================================================
+# SmartCare RBATPM — Master Configuration File (Template Example)
+# =============================================================================
+# Copy this file to config.ini and edit values for your local environment:
+#   cp config.ini.example config.ini
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+[server]
+# -----------------------------------------------------------------------------
+host        = 0.0.0.0
+port        = 5000
+workers     = 1
+log_level   = info
+
+
+# -----------------------------------------------------------------------------
+[model]
+# -----------------------------------------------------------------------------
+# Path to the YOLO weights file (relative to project root or absolute)
+model_path  = yolo26l.pt
+
+# Input image size fed to YOLO (must match training resolution; 640 or 1280)
+img_size    = 1280
+
+# Detection confidence threshold (0.0 – 1.0). Lower = more detections, more FP.
+conf_thresh = 0.25
+
+# GPU device index (0 = first GPU). Set to "cpu" to disable GPU.
+device      = 0
+
+# Frames per second to sample during inference on a recorded clip (~5 is good)
+inference_sample_fps = 5
+
+
+# -----------------------------------------------------------------------------
+[database]
+# -----------------------------------------------------------------------------
+db_path = rbatpm.db
+
+
+# -----------------------------------------------------------------------------
+[storage]
+# -----------------------------------------------------------------------------
+# Directory where video clips are saved (relative to project root)
+clips_dir        = clips
+
+# Sub-directory inside clips_dir for new recordings
+recordings_dir   = clips/recordings
+
+# Sub-directory for AI-inferred clips with ROI & bounding boxes
+inferred_clips_dir = clips/inferred
+
+# Directory for uploaded images (YOLO image endpoint)
+images_dir       = uploaded_images
+
+# Number of days before a clip is auto-deleted (0 = never delete)
+clips_retention_days = 30
+
+# How often the cleanup janitor runs, in seconds (3600 = every hour)
+janitor_interval_sec = 3600
+
+
+# -----------------------------------------------------------------------------
+[cameras]
+# -----------------------------------------------------------------------------
+# Each camera entry: cam<N>_id, cam<N>_url, cam<N>_fps
+# Add/remove entries here to register more or fewer cameras.
+
+cam1_id  = CAM01
+cam1_url = rtsp://<username>:<password>@<camera_ip>/Streaming/Channels/101
+cam1_fps = 10
+
+# cam2_id  = CAM02
+# cam2_url = rtsp://<username>:<password>@<camera_ip>/Streaming/Channels/101
+# cam2_fps = 10
+
+
+# -----------------------------------------------------------------------------
+[mediamtx]
+# -----------------------------------------------------------------------------
+# WebRTC streaming via MediaMTX Docker container.
+# The host IP is advertised to WebRTC clients for ICE candidate negotiation.
+host_ip         = <YOUR_SERVER_IP>
+webrtc_port     = 8889
+docker_image    = bluenviron/mediamtx
+mediamtx_config = mediamtx.yml
+
+# Camera-to-stream mapping (must match paths in mediamtx.yml)
+cam1_stream = cam1
+
+
+# -----------------------------------------------------------------------------
+[recording]
+# -----------------------------------------------------------------------------
+# Default pre-roll buffer: seconds of footage BEFORE the transaction to include
+default_pre_buffer_sec  = 5
+
+# Default post-roll buffer: seconds of footage AFTER the transaction to include
+default_post_buffer_sec = 5
+
+# Maximum recording duration in seconds before safety watchdog automatically stops recording
+max_recording_duration_sec = 600
+
+# In-memory ring buffer: how many seconds of raw frames to keep per camera
+frame_buffer_duration_sec = 30
+
+# Max frame dimension. Frames larger than this are downscaled (width x height).
+max_frame_width  = 1280
+max_frame_height = 720
+
+# Max resolution for debug video overlay rendering (downscaling saves CPU drawing & encoding cycles)
+debug_max_width  = 1280
+debug_max_height = 720
+
+
+# -----------------------------------------------------------------------------
+[risk_rules]
+# -----------------------------------------------------------------------------
+# Amount thresholds (INR) that determine automatic risk classification.
+high_amount_threshold   = 5000
+medium_amount_threshold = 2000
+
+# Comma-separated list of action types that always trigger at least MEDIUM risk
+medium_action_types = Refund, Discount Override
+
+
+# -----------------------------------------------------------------------------
+[inference]
+# -----------------------------------------------------------------------------
+presence_threshold_pct = 30.0
+generate_inferred_video = true
+
+
+# -----------------------------------------------------------------------------
+[demo]
+# -----------------------------------------------------------------------------
+demo_high_threshold   =
+demo_medium_threshold =
+demo_presence_pct     =
+demo_offline_mode     = false

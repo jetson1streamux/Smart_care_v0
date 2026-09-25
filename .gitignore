@@ -1,0 +1,41 @@
+# Configuration files containing sensitive credentials
+config.ini
+**/config.ini
+
+# AI Model Weights
+*.pt
+*.onnx
+*.engine
+*.weights
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Media, Recordings & Uploads
+clips/
+uploaded_images/
+
+# Log files
+*.log
+
+# C++ Build & Executables
+cpp_client/SmartCareClient
+cpp_client/*.o
+cpp_client/moc_*
+cpp_client/Makefile
+cpp_client/.qmake.stash
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# Temporary / OS / Office Lock Files
+.~lock.*
+.DS_Store
+*.tmp

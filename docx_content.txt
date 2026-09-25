@@ -1,0 +1,234 @@
+FUNCTIONAL REQUIREMENTS DOCUMENT
+Risk-Based Action Tracking & Proactive Monitoring
+SmartCare Integration with Video Analytics System (VAS)
+Document Version: 1.0
+Date: 04 July 2026
+Status: Draft for Review
+Prepared for internal functional review — hospital finance, audit, security and IT stakeholders.
+Document Control
+Revision History
+Version
+Date
+Author
+Description
+0.1
+04-Jul-2026
+Business Analyst
+Initial draft based on workshop discussion
+1.0
+04-Jul-2026
+Business Analyst
+Consolidated workflow, API contract and dashboard specification
+Distribution List
+Chief Financial Officer / Finance Controller
+Head of Internal Audit / Risk
+Hospital Security Head
+IT Head — SmartCare (HIS) Application Owner
+Video Analytics System (VAS) Vendor / Integration Lead
+1. Purpose
+This document defines the functional requirements for a Risk-Based Action Tracking and Proactive Monitoring (RBATPM) capability within SmartCare (the Hospital Information System). The objective is to move financial and stock-transaction oversight from a reactive, post-transaction audit model to a proactive, near real-time model — by correlating high-risk transactions at key hospital counters with live and recorded video evidence from the Video Analytics System (VAS), before or at the moment the transaction is completed.
+2. Scope
+2.1 In Scope
+Identification of key financial and stock-handling counters across the hospital (Billing, Cash Counter, Pharmacy, Stores/Inventory, Insurance Desk) as monitored points.
+Risk-rule evaluation of transactions initiated by staff at these counters within SmartCare.
+API-based integration where SmartCare triggers the VAS to start/mark recording of the relevant camera feed for a flagged transaction.
+A CCTV Alert Dashboard within SmartCare for reviewing, verifying, and escalating flagged transactions with linked video evidence.
+Subscription-based control over which staff, counters, or rules are actively monitored.
+2.2 Out of Scope
+Configuration and internal video-analytics algorithms of the VAS itself (e.g., facial recognition, motion-detection tuning) — treated as a vendor-managed black box exposed via API.
+Physical camera installation, network cabling, and storage infrastructure for video retention.
+Legal / statutory retention policy for video evidence (to be governed by a separate data-retention policy).
+3. Definitions & Abbreviations
+Term
+Definition
+SmartCare
+The Hospital Information System (HIS) that manages financial, billing, pharmacy and stock transactions.
+VAS
+Video Analytics System — the external CCTV/video platform exposing an API for recording control and stream access.
+RBATPM
+Risk-Based Action Tracking and Proactive Monitoring — the capability described in this document.
+Subscription (Y/N)
+Flag indicating whether a given staff member / counter / rule combination is actively enrolled for VAS-linked monitoring.
+Clip ID
+Unique identifier returned by VAS for a specific recorded video segment.
+Monitoring Gap
+A condition where a risk-flagged transaction has no corresponding video coverage (e.g., camera offline).
+4. End-to-End Workflow
+The workflow below describes the full lifecycle of a monitored transaction, from staff action in SmartCare to closure of the review.
+Phase 1 — Trigger
+Staff performs a financial or stock action at a monitored counter in SmartCare (e.g., cash refund, discount override, bill cancellation, stock issue).
+SmartCare's rule engine evaluates the action against configured risk rules and computes a Risk Score (High / Medium / Low).
+SmartCare checks the Subscription (Y/N) flag for the relevant staff / counter / rule combination.
+If Subscription = N: the transaction is logged normally in SmartCare; no VAS call is made; workflow ends.
+If Subscription = Y: workflow proceeds to Phase 2.
+Phase 2 — Capture
+SmartCare calls the VAS API (start-recording trigger) passing Staff ID, Counter/Camera ID, Transaction ID, timestamp, and pre-/post-event buffer duration.
+VAS starts or marks the recording for the mapped camera stream and returns a Clip ID, Live Stream reference, Recording Status and Camera Health Status.
+SmartCare evaluates the VAS response:
+If the response indicates failure or the camera is offline: SmartCare raises a parallel “Monitoring Gap” alert, since a risk-flagged transaction with no video coverage is itself a risk signal.
+If successful: SmartCare stores the Clip ID / Stream reference against the Transaction ID for display on the dashboard.
+Phase 3 — Alert & Review
+The flagged transaction appears on the SmartCare CCTV Alert Dashboard with Module, Staff ID, Action, Risk Score and Counter details.
+A reviewer (supervisor / auditor) opens the alert and uses View Live Stream, View Log, and/or View Recording with Narrative to examine the transaction.
+The reviewer records a narrative or remarks, cross-referencing the transaction log against the video evidence.
+Phase 4 — Disposition & Closure
+The reviewer marks the transaction outcome as Verified-Clean, Verified-Discrepancy, or Escalated.
+Escalated items are routed to the Risk / Audit / Security team together with the evidence package (video clip, transaction log, narrative).
+SmartCare updates the transaction status and audit trail; dashboard KPIs (turnaround time, escalation rate, monitoring-gap count) are refreshed.
+5. System Interaction Overview
+The diagram below represents the sequence of interaction between the staff user, SmartCare, the VAS, and the reviewer.
+Step
+Actor
+Interaction
+1
+Staff
+Initiates financial/stock transaction in SmartCare
+2
+SmartCare
+Runs risk-rule engine; computes Risk Score
+3
+SmartCare
+Checks Subscription (Y/N)
+4
+SmartCare → VAS
+API call: start recording (Staff ID, Camera ID, Txn ID, buffers)
+5
+VAS → SmartCare
+Returns Clip ID, Stream URL, Recording Status, Camera Health
+6
+SmartCare
+Raises Alert (+ Monitoring Gap alert if VAS call failed)
+7
+Reviewer
+Views alert, live stream, recording and log on Dashboard
+8
+Reviewer
+Verifies / Escalates transaction with narrative
+9
+SmartCare
+Updates transaction status, audit trail and KPIs
+6. Integration — API Contract (SmartCare → VAS)
+SmartCare acts as the API caller (client); VAS acts as the responder (server). All calls are triggered only when Subscription = Y for the relevant staff/counter/rule.
+6.1 Request — SmartCare to VAS
+Parameter
+Description
+Staff ID
+Staff member who triggered the action
+Module
+Source module (Billing, Pharmacy, Stores, Cash Counter, Insurance Desk, etc.)
+Action Type
+Transaction type (Refund, Discount Override, Stock Issue, Bill Cancellation, etc.)
+Transaction ID
+Unique reference to the SmartCare transaction
+Counter / Camera ID
+Physical counter mapped to the camera(s) covering that location
+Timestamp
+Date/time of the triggering action
+Risk Score / Flag
+Risk level computed by SmartCare's rule engine (High / Medium / Low)
+Pre-buffer Duration
+Seconds before the trigger to include in the recording (e.g., –30s)
+Post-buffer Duration
+Seconds after the trigger to continue recording (e.g., +60s)
+Subscription (Y/N)
+Confirms active monitoring status; gates whether the call is made at all
+Callback URL (optional)
+Endpoint for VAS to notify SmartCare asynchronously once the clip is finalized
+6.2 Response — VAS to SmartCare
+Parameter
+Description
+Request Status
+Success / Failure / Camera Offline / Camera Not Found
+Clip ID
+Unique identifier for the recorded segment
+Live Stream URL / Token
+Reference SmartCare embeds to display the live feed on its dashboard
+Recording URL / Token
+Reference to the recorded clip once available
+Recording Status
+Recording / Processing / Ready / Failed
+Camera Health Status
+Online / Offline / Degraded
+Clip Duration
+Actual length of the captured segment
+VAS Timestamp
+Time VAS registered/started capture (for sync/audit against SmartCare's timestamp)
+Error Code / Reason
+Populated only on failure, e.g., Camera Offline, Invalid Counter Mapping, API Timeout
+6.3 Exception Handling Logic (within SmartCare)
+If Request Status = Failure or Camera Offline: raise a secondary “Monitoring Gap” alert alongside the original transaction alert.
+If Subscription = N: skip the VAS call entirely; log the transaction normally without triggering monitoring.
+Store the returned Clip ID / Stream reference against the Transaction ID so the dashboard can render View Live Stream and View Recording actions directly.
+If the VAS API call times out, retry per an agreed retry policy (e.g., 2 retries with backoff) before logging the attempt as failed.
+7. CCTV Alert Dashboard — Functional Specification
+The dashboard is surfaced within SmartCare and provides reviewers a single screen to triage, investigate and close out flagged transactions.
+7.1 Summary / KPI Strip
+High-risk alerts (current period)
+Medium-risk alerts (current period)
+Auto-cleared low-risk transactions
+Monitoring gaps (camera offline / failed capture)
+Average verification turnaround time
+7.2 Alert Queue — Columns
+Column
+Description
+Module
+Billing / Pharmacy / Stores / Cash Counter / Insurance Desk
+Staff ID
+Staff member associated with the transaction
+Action
+Transaction description (type + key value, e.g., refund amount)
+Risk
+High / Medium / Low / Monitoring Gap indicator
+Counter
+Physical counter and mapped Camera ID
+Time
+Timestamp of the triggering action
+Actions
+View Live Stream, View Log, View Recording with Narrative, Verify Transaction
+7.3 Risk Indicator Legend
+High
+Immediate reviewer attention required (e.g., large refund, after-hours cancellation)
+Medium
+Review within same shift (e.g., discount override above threshold)
+Low
+Auto-logged; sampled/periodic review only
+Monitoring Gap
+Video coverage unavailable for a flagged transaction — treated as high priority regardless of original risk score
+7.4 Alert Detail View
+Recording playback panel (embedded, linked via VAS Clip ID).
+System log trail showing transaction sequence (initiation, amount entry, risk-engine flag, VAS trigger, confirmation).
+Reviewer narrative field — free text, time-stamped and attributed to the reviewer.
+Verify Transaction control — captures outcome (Verified-Clean / Verified-Discrepancy / Escalated) and routes accordingly.
+7.5 Monitored Counters Panel
+List of all monitored counters with Camera ID, live health status (Online/Offline), and Subscription (Y/N) status.
+Enables the reviewer to identify at a glance which counters currently lack video coverage.
+7.6 Escalation Queue Panel
+Running list of transactions escalated to Risk/Audit/Security, with status of investigation closure.
+8. Roles & Access (Indicative)
+Role
+Access
+Counter Staff
+No access to dashboard; transactions processed as normal in SmartCare
+Shift Supervisor
+View alerts for own department/counters; verify/clear low & medium risk items
+Risk / Audit Team
+View all alerts; access recordings and logs; close escalations
+Security Head
+View all alerts and camera health; manage subscription list
+IT Administrator
+Configure counter-to-camera mapping, risk-rule thresholds, and subscription flags
+9. Open Items for Stakeholder Decision
+Final risk-rule catalog and exact thresholds (refund limits, discount %, after-hours definition, cancel-rebill pattern detection, etc.).
+Escalation SLA — maximum time an alert may remain unreviewed before automatic escalation.
+Video evidence retention period and storage ownership (SmartCare vs. VAS vendor).
+Retry policy and timeout thresholds for the SmartCare → VAS API call.
+Role-based access matrix sign-off (Section 8) with Finance, Audit and Security stakeholders.
+10. Approval
+Name
+Role
+Signature
+Date
+Chief Financial Officer
+Head of Internal Audit
+Hospital Security Head
+IT Head (SmartCare)

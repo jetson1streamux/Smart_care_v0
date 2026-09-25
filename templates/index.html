@@ -1,0 +1,3117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCare | Risk-Based Action Tracking & Proactive Monitoring</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(22, 28, 45, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+
+            --color-high: #ef4444;
+            --color-high-glow: rgba(239, 68, 68, 0.35);
+
+            --color-medium: #f59e0b;
+            --color-medium-glow: rgba(245, 158, 11, 0.35);
+
+            --color-low: #10b981;
+            --color-low-glow: rgba(16, 185, 129, 0.35);
+
+            --color-gap: #6366f1;
+            --color-gap-glow: rgba(99, 102, 241, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            min-height: 100vh;
+            background-image:
+                radial-gradient(at 10% 20%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--primary-glow);
+            font-family: 'Outfit', sans-serif;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .logo-title {
+            font-size: 22px;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-title span {
+            color: var(--text-muted);
+            font-weight: 300;
+            font-size: 14px;
+            display: block;
+            margin-top: -2px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--color-low);
+            box-shadow: 0 0 10px var(--color-low);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* Container grid – single source of truth */
+        .container {
+            max-width: 100vw;
+            margin: 0 auto;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 220px 300px minmax(0, 1fr);
+            gap: 16px;
+        }
+
+        /* Glass Panel Styling – backdrop-filter only on header/modal for performance */
+        .glass-panel {
+            background: rgba(22, 28, 45, 0.85);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            transition: border-color 0.2s;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* KPI Strip */
+        .kpi-strip {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .kpi-card.high::before {
+            background-color: var(--color-high);
+        }
+
+        .kpi-card.medium::before {
+            background-color: var(--color-medium);
+        }
+
+        .kpi-card.low::before {
+            background-color: var(--color-low);
+        }
+
+        .kpi-card.gap::before {
+            background-color: var(--color-gap);
+        }
+
+        .kpi-card.tat::before {
+            background-color: var(--primary);
+        }
+
+        .kpi-val {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            line-height: 1;
+        }
+
+        .kpi-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Left Column Controls */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Clips Sidebar items */
+        .clip-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .clip-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .clip-card .clip-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .clip-card .clip-body {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .clip-card .clip-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control option {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .btn:disabled {
+            background: #1e293b !important;
+            color: var(--text-muted) !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Table Styling */
+        .alert-queue-panel {
+            min-height: 500px;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 12px 16px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 14px;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.015);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--color-high);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.1);
+        }
+
+        .badge.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--color-medium);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .badge.low {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-low);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge.gap {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--color-gap);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-table {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-table:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Detail Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5, 7, 12, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            width: 1000px;
+            max-width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            display: grid;
+            grid-template-columns: 550px 1fr;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .close-modal:hover {
+            color: #fff;
+        }
+
+        .modal-video-section {
+            background: #020617;
+            padding: 24px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .video-container video,
+        .video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-status-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .video-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .modal-info-section {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-header-title {
+            margin-bottom: 5px;
+            font-size: 22px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .detail-item span {
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 2px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .detail-item strong {
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .log-trail {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .log-entry {
+            margin-bottom: 6px;
+        }
+
+        .log-entry span {
+            color: var(--primary);
+        }
+
+        .disposition-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-disp {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-disp:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-disp.active.clean {
+            background: var(--color-low-glow);
+            color: var(--color-low);
+            border-color: var(--color-low);
+        }
+
+        .btn-disp.active.discrepancy {
+            background: var(--color-medium-glow);
+            color: var(--color-medium);
+            border-color: var(--color-medium);
+        }
+
+        .btn-disp.active.escalate {
+            background: var(--color-high-glow);
+            color: var(--color-high);
+            border-color: var(--color-high);
+        }
+
+        /* Monitored Counters Dashboard Section */
+        .counters-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .counter-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .counter-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .counter-name {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .counter-camera {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .counter-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .health-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .health-indicator::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .health-indicator.online::before {
+            background: var(--color-low);
+            box-shadow: 0 0 6px var(--color-low);
+        }
+
+        .health-indicator.offline::before {
+            background: var(--color-high);
+            box-shadow: 0 0 6px var(--color-high);
+        }
+
+        .subscription-switch {
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            min-width: 52px;
+            text-align: center;
+            color: var(--text-color);
+        }
+
+        .subscription-switch.active {
+            background: rgba(79, 70, 229, 0.2);
+            border-color: var(--primary);
+            color: #818cf8;
+        }
+
+        /* Escalated alerts log */
+        .escalated-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .escalated-item {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .escalated-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .escalated-status {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--color-high);
+            text-transform: uppercase;
+        }
+
+        /* Live Stream Floating preview */
+        .live-preview-box {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .live-stream-card {
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        .live-stream-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .live-stream-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            border-left: 4px solid var(--primary);
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.high {
+            border-left-color: var(--color-high);
+        }
+
+        .toast.gap {
+            border-left-color: var(--color-gap);
+        }
+
+        /* Sidebar columns – min-width 0 prevents grid blowout */
+        .sidebar {
+            min-width: 0;
+        }
+
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 200px 280px minmax(0, 1fr);
+                gap: 12px;
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 960px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .sidebar:nth-child(4) {
+                /* 3rd sidebar = alert queue column */
+                grid-column: 1 / -1;
+            }
+        }
+
+        .table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 340px;
+            max-width: 100%;
+            width: 100%;
+        }
+
+        html,
+        body {
+            overflow-x: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* === VIDEO MODE TOGGLE (Live Stream / Recorded) === */
+        .video-mode-bar {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .video-mode-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .video-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+        }
+
+        .video-mode-btn.active {
+            background: rgba(79, 70, 229, 0.2);
+            border-color: var(--primary);
+            color: #818cf8;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .video-mode-btn.live.active {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--color-high);
+            color: var(--color-high);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+        }
+
+        .webrtc-iframe-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: #000;
+            display: none;
+        }
+
+        .webrtc-iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .webrtc-offline-msg {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--color-high);
+            box-shadow: 0 0 6px var(--color-high);
+            margin-right: 4px;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* === TAB BAR === */
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            background: rgba(11, 15, 25, 0.9);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 40px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 14px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-color);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-btn.active {
+            color: #818cf8;
+            border-bottom-color: #818cf8;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* === ROI SETTINGS === */
+        .roi-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+        }
+
+        .roi-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .roi-canvas-area {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .roi-canvas-area img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .roi-canvas-area canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            cursor: crosshair;
+        }
+
+        .roi-shape-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .roi-shape-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        .roi-shape-item:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .roi-shape-item .roi-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-low);
+            box-shadow: 0 0 6px var(--color-low);
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .roi-delete-btn {
+            background: none;
+            border: none;
+            color: var(--color-high);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .roi-delete-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .roi-instructions {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .roi-instructions strong {
+            color: #818cf8;
+        }
+
+        .btn-roi-save {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-roi-clear {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-color) !important;
+            box-shadow: none !important;
+        }
+
+        .btn-roi-clear:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .roi-status-msg {
+            font-size: 13px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ====== ANALYTICS TAB STYLES ====== */
+        .analytics-container {
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Hero banner */
+        .an-hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 22px 28px;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.18) 0%, rgba(99, 102, 241, 0.08) 60%, transparent 100%);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .an-hero::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .an-hero-title {
+            font-size: 22px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #e2e8f0, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .an-hero-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+            max-width: 560px;
+            line-height: 1.5;
+        }
+
+        .an-live-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-low);
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* KPI cards */
+        .an-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .an-kpi-card {
+            background: rgba(22, 28, 45, 0.85);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent);
+            border-radius: 14px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .an-kpi-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .an-kpi-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .an-kpi-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .an-kpi-num {
+            font-size: 30px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--text-color);
+        }
+
+        .an-kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-top: 4px;
+        }
+
+        .an-kpi-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* 3-column body grid */
+        .an-body-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 360px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .an-col-panel {
+            min-height: 320px;
+        }
+
+        /* Spec rows (VAS overview) */
+        .an-spec-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        .an-spec-row span {
+            color: var(--text-muted);
+        }
+
+        /* Disposition rows */
+        .an-disp-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: var(--row-bg);
+            border-radius: 8px;
+            border: 1px solid var(--row-border);
+            font-size: 13px;
+        }
+
+        /* Analytics tab counter cards - wider, richer */
+        .an-counter-card {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .an-counter-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .an-counter-cam-badge {
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(79, 70, 229, 0.15);
+            color: #818cf8;
+            border: 1px solid rgba(79, 70, 229, 0.25);
+            border-radius: 6px;
+            padding: 3px 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .an-counter-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .an-counter-name {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .an-counter-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .an-counter-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">SC</div>
+            <div class="logo-title">
+                SmartCare
+                <span>Risk-Based Action Tracking & Proactive Monitoring (RBATPM)</span>
+            </div>
+        </div>
+        <div class="system-status">
+            <div class="status-dot"></div>
+            VAS Connection: Online
+        </div>
+    </header>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">📊
+            Dashboard</button>
+        <button class="tab-btn" data-tab="tab-analytics" onclick="switchTab('tab-analytics')">📈 Analytics</button>
+        <button class="tab-btn" data-tab="tab-roi" onclick="switchTab('tab-roi')">🎯 ROI Settings</button>
+    </div>
+
+    <!-- TAB: Dashboard (existing content) -->
+    <div class="tab-content active" id="tab-dashboard">
+        <div class="container">
+            <!-- KPI Strip -->
+            <div class="kpi-strip">
+                <div class="kpi-card high">
+                    <span class="kpi-val" id="kpi-high">0</span>
+                    <span class="kpi-label">High Risk Alerts</span>
+                </div>
+                <div class="kpi-card medium">
+                    <span class="kpi-val" id="kpi-medium">0</span>
+                    <span class="kpi-label">Medium Risk Alerts</span>
+                </div>
+                <div class="kpi-card low">
+                    <span class="kpi-val" id="kpi-low">0</span>
+                    <span class="kpi-label">Auto-Cleared Low</span>
+                </div>
+                <div class="kpi-card gap">
+                    <span class="kpi-val" id="kpi-gap">0</span>
+                    <span class="kpi-label">Monitoring Gaps</span>
+                </div>
+                <div class="kpi-card tat">
+                    <span class="kpi-val" id="kpi-tat">0.0s</span>
+                    <span class="kpi-label">Avg Turnaround Time</span>
+                </div>
+            </div>
+
+            <!-- Column 1: Recorded CCTV Clips Sidebar -->
+            <div class="sidebar">
+                <div class="glass-panel"
+                    style="display: flex; flex-direction: column; height: calc(100vh - 200px); min-height: 500px;">
+                    <h3 class="panel-title">Recorded CCTV Clips</h3>
+                    <div id="clips-sidebar-list"
+                        style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; padding-right: 4px;">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Transaction Simulator (full height) -->
+            <div class="sidebar">
+                <div class="glass-panel"
+                    style="display: flex; flex-direction: column; height: calc(100vh - 200px); min-height: 500px;">
+                    <h3 class="panel-title">Transaction Simulator</h3>
+                    <form id="simulator-form"
+                        style="flex: 1; display: flex; flex-direction: column; gap: 0; overflow-y: auto; padding-right: 4px; padding-bottom: 4px;">
+                        <div
+                            style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                            1. Start Transaction</div>
+
+                        <div class="form-group">
+                            <label for="sim-staff">Staff ID</label>
+                            <input type="text" id="sim-staff" class="form-control" value="STF102" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sim-counter">Counter / Camera Mapping</label>
+                            <select id="sim-counter" class="form-control">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sim-module">Module</label>
+                            <select id="sim-module" class="form-control">
+                                <option value="Billing">Billing Desk</option>
+                                <option value="Pharmacy">Pharmacy</option>
+                                <option value="Stores">Stores/Inventory</option>
+                                <option value="Cash Counter">Cash Counter</option>
+                                <option value="Insurance Desk">Insurance Desk</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sim-action">Action Type</label>
+                            <select id="sim-action" class="form-control">
+                                <option value="Refund">Cash Refund</option>
+                                <option value="Discount Override">Discount Override</option>
+                                <option value="Stock Issue">Inventory Issue</option>
+                                <option value="Bill Cancellation">Bill Cancellation</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sim-subscription">Counter Subscription</label>
+                            <select id="sim-subscription" class="form-control">
+                                <option value="Y">Active (Y) - Trigger Video Capture</option>
+                                <option value="N">Inactive (N) - Log Only</option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn" id="btn-start-txn"
+                            style="background: var(--color-low); box-shadow: 0 4px 12px var(--color-low-glow); margin-bottom: 16px;">▶
+                            Start Transaction</button>
+
+                        <div
+                            style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 12px; margin-top: auto;">
+                            <div
+                                style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                                2. End Transaction</div>
+
+                            <div class="form-group">
+                                <label for="sim-amount">Final Transaction Amount (₹)</label>
+                                <input type="number" id="sim-amount" class="form-control" value="6500"
+                                    placeholder="Enter amount when ending transaction" required>
+                            </div>
+
+                            <button type="button" class="btn" id="btn-end-txn"
+                                style="background: var(--color-high); box-shadow: 0 4px 12px var(--color-high-glow); width: 100%;"
+                                disabled>⏹ End Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Hidden anchor for renderCounters JS (data synced to Analytics tab) -->
+            <div id="counters-list" style="display:none;"></div>
+
+            <!-- Column 3: Alert Queue (full height) -->
+            <div class="sidebar">
+                <div class="glass-panel"
+                    style="display: flex; flex-direction: column; height: calc(100vh - 200px); min-height: 500px;">
+                    <h3 class="panel-title">Alert Queue</h3>
+                    <div class="table-container" style="flex: 1; max-height: none;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Module</th>
+                                    <th>Staff</th>
+                                    <th>Action Detail</th>
+                                    <th>Risk Level</th>
+                                    <th>AI Status</th>
+                                    <th>Counter</th>
+                                    <th>Timestamp</th>
+                                    <th>Verification</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alert-queue-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- end tab-dashboard -->
+
+    <!-- TAB: Analytics -->
+    <div class="tab-content" id="tab-analytics">
+        <div class="analytics-container">
+
+            <!-- ===== Hero Header ===== -->
+            <div class="an-hero">
+                <div class="an-hero-text">
+                    <h2 class="an-hero-title">System Analytics &amp; Monitoring</h2>
+                    <p class="an-hero-sub">Live view of all camera feeds, risk events, and audit outcomes across the
+                        SmartCare RBATPM platform.</p>
+                </div>
+                <div class="an-live-badge">
+                    <span class="status-dot" style="width:10px;height:10px;"></span>
+                    Live · Auto-refreshes every 5s
+                </div>
+            </div>
+
+            <!-- ===== KPI Row ===== -->
+            <div class="an-kpi-row">
+                <div class="an-kpi-card" style="--accent: var(--color-high);">
+                    <div class="an-kpi-icon" style="background: rgba(239,68,68,0.12); color: var(--color-high);">🚨
+                    </div>
+                    <div class="an-kpi-body">
+                        <div class="an-kpi-num" id="an-kpi-high">0</div>
+                        <div class="an-kpi-label">High Risk Alerts</div>
+                        <div class="an-kpi-sub">Unresolved events</div>
+                    </div>
+                </div>
+                <div class="an-kpi-card" style="--accent: var(--color-medium);">
+                    <div class="an-kpi-icon" style="background: rgba(245,158,11,0.12); color: var(--color-medium);">⚠️
+                    </div>
+                    <div class="an-kpi-body">
+                        <div class="an-kpi-num" id="an-kpi-medium">0</div>
+                        <div class="an-kpi-label">Medium Risk Alerts</div>
+                        <div class="an-kpi-sub">Pending review</div>
+                    </div>
+                </div>
+                <div class="an-kpi-card" style="--accent: var(--color-gap);">
+                    <div class="an-kpi-icon" style="background: rgba(99,102,241,0.12); color: var(--color-gap);">📡
+                    </div>
+                    <div class="an-kpi-body">
+                        <div class="an-kpi-num" id="an-kpi-gap">0</div>
+                        <div class="an-kpi-label">Monitoring Gaps</div>
+                        <div class="an-kpi-sub">Camera offline events</div>
+                    </div>
+                </div>
+                <div class="an-kpi-card" style="--accent: var(--primary);">
+                    <div class="an-kpi-icon" style="background: rgba(79,70,229,0.12); color: #818cf8;">⏱️</div>
+                    <div class="an-kpi-body">
+                        <div class="an-kpi-num" id="an-kpi-tat">0.0s</div>
+                        <div class="an-kpi-label">Avg Turnaround Time</div>
+                        <div class="an-kpi-sub">Audit response speed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Main 4-column body (Risk Classification & Gap) ===== -->
+            <div class="an-body-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+                <!-- High Risk Alerts -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title" style="color: var(--color-high);">🚨 High Risk</h3>
+                    <div id="an-high-alerts"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+
+                <!-- Medium Risk Alerts -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title" style="color: var(--color-medium);">⚠️ Medium Risk</h3>
+                    <div id="an-medium-alerts"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+
+                <!-- Low Risk Alerts -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title" style="color: var(--color-low);">✅ Low Risk</h3>
+                    <div id="an-low-alerts"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+
+                <!-- Gap Alerts -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title" style="color: var(--color-gap);">📡 Gap Alerts</h3>
+                    <div id="an-gap-alerts"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+            </div>
+
+            <!-- ===== New Row (Alert Raised & Clean Section) ===== -->
+            <div class="an-body-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 20px;">
+                <!-- Alert Raised -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title" style="color: var(--color-medium);">⚠️ Alert Raised</h3>
+                    <div id="an-alert-raised"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+
+                <!-- Clean Section -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title" style="color: var(--color-low);">✅ Clean Section</h3>
+                    <div id="an-clean-section"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+            </div>
+
+            <!-- ===== Second 4-column body (Queue & Verification) ===== -->
+            <div class="an-body-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
+                <!-- Escalation Queue -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title">🚨 Escalated Queue
+                        <span id="an-esc-count" style="font-size:12px;color:var(--color-high);font-weight:400;"></span>
+                    </h3>
+                    <div id="escalated-queue" class="escalated-list"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+
+                <!-- Verified Discrepancy -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title">⚠️ Verified Discrepancy</h3>
+                    <div id="an-verified-disc"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+
+                <!-- Verified Clean (Logs) -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title">✅ Verified Logs</h3>
+                    <div id="an-verified-clean"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;"></div>
+                </div>
+
+                <!-- Monitored Counters -->
+                <div class="glass-panel an-col-panel">
+                    <h3 class="panel-title">📷 Camera Status</h3>
+                    <div id="an-counters-list"
+                        style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:300px;">
+                        <div style="text-align:center;font-size:12px;color:var(--text-muted);padding:20px;">Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Third Row (Overview & Breakdown) ===== -->
+            <div class="an-body-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+                <!-- Disposition Breakdown -->
+                <div class="glass-panel">
+                    <h3 class="panel-title">📋 Disposition Breakdown</h3>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div class="an-disp-row"
+                            style="--row-color:var(--color-low); --row-bg:rgba(16,185,129,0.06); --row-border:rgba(16,185,129,0.18);">
+                            <span>✅ Verified Clean</span>
+                            <strong id="an-count-clean" style="color:var(--color-low);">0</strong>
+                        </div>
+                        <div class="an-disp-row"
+                            style="--row-color:var(--color-medium); --row-bg:rgba(245,158,11,0.06); --row-border:rgba(245,158,11,0.18);">
+                            <span>⚠️ Discrepancy</span>
+                            <strong id="an-count-disc" style="color:var(--color-medium);">0</strong>
+                        </div>
+                        <div class="an-disp-row"
+                            style="--row-color:var(--color-high); --row-bg:rgba(239,68,68,0.06); --row-border:rgba(239,68,68,0.18);">
+                            <span>🚨 Escalated</span>
+                            <strong id="an-count-esc" style="color:var(--color-high);">0</strong>
+                        </div>
+                        <div class="an-disp-row"
+                            style="--row-color:var(--text-muted); --row-bg:rgba(255,255,255,0.02); --row-border:var(--border-color);">
+                            <span style="color:var(--text-muted);">🕐 Pending</span>
+                            <strong id="an-count-pending" style="color:var(--text-muted);">0</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VAS System Overview -->
+                <div class="glass-panel">
+                    <h3 class="panel-title">⚡ VAS System Overview</h3>
+                    <p style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:14px;">
+                        The <strong style="color:var(--text-color);">Video Analytics System</strong> runs AI inference
+                        on all active video streams to detect person presence at transaction counters.
+                    </p>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div class="an-spec-row"><span>Model</span><strong>AI Verification Model</strong></div>
+                        <div class="an-spec-row"><span>Sample Rate</span><strong>5 fps</strong></div>
+                        <div class="an-spec-row"><span>Presence Threshold</span><strong>≥ 30%</strong></div>
+                        <div class="an-spec-row"><span>Alert Trigger</span><strong
+                                style="color:var(--color-high);">Empty Counter</strong></div>
+                        <div class="an-spec-row"><span>Pre-buffer</span><strong>5 sec</strong></div>
+                        <div class="an-spec-row"><span>Post-buffer</span><strong>5 sec</strong></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div> <!-- end tab-analytics -->
+
+
+    <div class="tab-content" id="tab-roi">
+        <div class="roi-container">
+            <!-- Left: Controls -->
+            <div class="roi-sidebar">
+                <div class="glass-panel">
+                    <h3 class="panel-title">Camera Selection</h3>
+                    <div class="form-group">
+                        <label for="roi-camera-select">Select Camera Stream</label>
+                        <select id="roi-camera-select" class="form-control">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <button class="btn" style="margin-top: 8px;" onclick="roiLoadSnapshot()">📷 Refresh
+                        Snapshot</button>
+                </div>
+
+                <div class="glass-panel">
+                    <h3 class="panel-title">Draw New ROI</h3>
+                    <div class="form-group">
+                        <label for="roi-name-input">ROI Name</label>
+                        <input type="text" id="roi-name-input" class="form-control" placeholder="e.g. billing_zone">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button class="btn btn-roi-clear" onclick="roiClearDrawing()">Clear Points</button>
+                        <button class="btn btn-roi-save" onclick="roiSaveShape()">Save Shape</button>
+                    </div>
+                    <div class="roi-instructions" style="margin-top: 12px;">
+                        <strong>How to draw:</strong><br>
+                        • Click on the canvas to place polygon vertices<br>
+                        • Minimum 3 points required<br>
+                        • Right-click to cancel drawing<br>
+                        • Yellow = in-progress, Green = saved
+                    </div>
+                </div>
+
+                <div class="glass-panel">
+                    <h3 class="panel-title">Saved ROIs <span id="roi-count-badge"
+                            style="font-size:12px; color: var(--text-muted); font-weight:400;"></span></h3>
+                    <div class="roi-shape-list" id="roi-shape-list">
+                        <div
+                            style="text-align: center; font-size: 12px; color: var(--text-muted); padding: 16px; font-style: italic;">
+                            No ROIs configured</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
+                        <button class="btn btn-roi-clear" onclick="roiRemoveAll()" style="font-size:12px;">🗑 Remove
+                            All</button>
+                        <button class="btn" onclick="roiSaveToDatabase()" style="font-size:12px;">💾 Save to
+                            Database</button>
+                    </div>
+                    <div id="roi-status-message"></div>
+                </div>
+            </div>
+
+            <!-- Right: Canvas -->
+            <div class="roi-sidebar">
+                <div class="glass-panel" style="padding: 16px;">
+                    <h3 class="panel-title">ROI Drawing Canvas <span id="roi-canvas-dims"
+                            style="font-size:12px; color: var(--text-muted); font-weight:400;">1280×720</span></h3>
+                    <div class="roi-canvas-area" id="roi-canvas-area">
+                        <img id="roi-bg-image" src="" alt="Camera snapshot">
+                        <canvas id="roi-draw-canvas" width="1280" height="720"></canvas>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted);">
+                        💡 The ROI polygons define the area where person detection will be evaluated during AI
+                        inference.
+                        Detections outside the ROI will be ignored.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Investigation Modal -->
+    <div class="modal-overlay" id="investigate-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="btn-close-modal">&times;</button>
+
+            <div class="modal-video-section">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px;">
+                    <h3 style="font-family: 'Outfit'; margin: 0;">CCTV Audit Evidence</h3>
+                </div>
+                <div class="video-mode-bar">
+                    <button class="video-mode-btn active" id="btn-mode-inferred"
+                        onclick="switchVideoMode('inferred')">🤖 AI Inferred (ROI & Boxes)</button>
+                    <button class="video-mode-btn" id="btn-mode-recorded" onclick="switchVideoMode('recorded')">📹 Raw
+                        Footage</button>
+                    <button class="video-mode-btn live" id="btn-mode-live" onclick="switchVideoMode('live')"><span
+                            class="live-dot"></span> Live Stream</button>
+                </div>
+                <div class="video-container" id="recorded-video-container">
+                    <video id="modal-video-player" controls preload="auto" playsinline style="object-fit: contain;">
+                        <source id="video-source" src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <canvas id="modal-roi-canvas" width="1280" height="720"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; object-fit: contain;"></canvas>
+                    <div class="video-status-overlay" id="video-status-overlay">
+                        <div class="video-spinner"></div>
+                        <span id="video-status-text">Processing clip and running AI inference...</span>
+                    </div>
+                </div>
+                <div class="webrtc-iframe-container" id="webrtc-container">
+                    <iframe id="webrtc-iframe" src="" allow="autoplay" allowfullscreen></iframe>
+                </div>
+                <div class="webrtc-offline-msg" id="webrtc-offline-msg">
+                    <div style="font-size: 32px;">📡</div>
+                    <div>Live stream unavailable</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Video server may not be running or camera is
+                        offline.</div>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); width: 100%; text-align: left;"
+                    id="video-hint-text">
+                    💡 The video buffer captures the counter's state including the configured pre-buffer and post-buffer
+                    frames around the transaction timestamp.
+                </div>
+            </div>
+
+            <div class="modal-info-section">
+                <div>
+                    <h3 class="modal-header-title" id="modal-title">Transaction Details</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;" id="modal-txn-id">Txn ID:
+                        -</p>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span>Staff ID</span>
+                        <strong id="detail-staff">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Counter Location</span>
+                        <strong id="detail-counter">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Module</span>
+                        <strong id="detail-module">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Action</span>
+                        <strong id="detail-action">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Original Risk</span>
+                        <span id="detail-risk-tag" class="badge">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Camera Health</span>
+                        <strong id="detail-camera-health">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>AI Detection</span>
+                        <strong id="detail-yolo">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Presence Ratio</span>
+                        <strong id="detail-presence">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Start Time</span>
+                        <strong id="detail-start-time">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>End Time</span>
+                        <strong id="detail-end-time">-</strong>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 8px; font-size: 14px; font-family: 'Outfit';">Audit Log Trail</h4>
+                    <div class="log-trail" id="modal-log-trail">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div id="modal-remarks-section">
+                    <h4 style="margin-bottom: 8px; font-size: 14px; font-family: 'Outfit';">Auditor Notes & Remarks</h4>
+                    <textarea id="modal-remarks" class="form-control" rows="3"
+                        placeholder="Enter transaction analysis notes, correlation observations, or justification..."
+                        style="resize: none;"></textarea>
+                </div>
+
+                <div id="modal-disposition-section">
+                    <h4 style="margin-bottom: 8px; font-size: 14px; font-family: 'Outfit';">Select Action Outcome
+                        (Disposition)</h4>
+                    <div class="disposition-buttons">
+                        <button class="btn-disp clean" data-outcome="Verified-Clean">Verified Clean</button>
+                        <button class="btn-disp discrepancy" data-outcome="Verified-Discrepancy">Verified
+                            Discrepancy</button>
+                        <button class="btn-disp escalate" data-outcome="Escalated">Escalate to Risk</button>
+                    </div>
+                </div>
+
+                <button class="btn" id="btn-save-disposition" style="margin-top: 10px;">Save Review & Close
+                    Alert</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="system-toast">
+        <div style="font-weight: bold; font-family: 'Outfit';" id="toast-title">New Alert raised!</div>
+        <div style="font-size: 13px;" id="toast-desc">Transaction triggered at Empty Counter</div>
+    </div>
+
+    <script>
+        // Global variables
+        let counters = [];
+        let alerts = [];
+        let selectedAlertId = null;
+        let selectedOutcome = null;
+        let activeTransactionId = null; // Track active transaction simulation
+
+        // Dom Elements
+        const simCounterSelect = document.getElementById('sim-counter');
+        const countersList = document.getElementById('counters-list');
+        const alertQueueBody = document.getElementById('alert-queue-body');
+        const escalatedQueue = document.getElementById('escalated-queue');
+        const clipsSidebarList = document.getElementById('clips-sidebar-list');
+
+        const kpiHigh = document.getElementById('kpi-high');
+        const kpiMedium = document.getElementById('kpi-medium');
+        const kpiLow = document.getElementById('kpi-low');
+        const kpiGap = document.getElementById('kpi-gap');
+        const kpiTat = document.getElementById('kpi-tat');
+
+        const btnStartTxn = document.getElementById('btn-start-txn');
+        const btnEndTxn = document.getElementById('btn-end-txn');
+
+        const investigateModal = document.getElementById('investigate-modal');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const modalVideoPlayer = document.getElementById('modal-video-player');
+        const videoSource = document.getElementById('video-source');
+        const videoOverlay = document.getElementById('video-status-overlay');
+        const videoStatusText = document.getElementById('video-status-text');
+
+        const modalTitle = document.getElementById('modal-title');
+        const modalTxnId = document.getElementById('modal-txn-id');
+        const detailStaff = document.getElementById('detail-staff');
+        const detailCounter = document.getElementById('detail-counter');
+        const detailModule = document.getElementById('detail-module');
+        const detailAction = document.getElementById('detail-action');
+        const detailRiskTag = document.getElementById('detail-risk-tag');
+        const detailCameraHealth = document.getElementById('detail-camera-health');
+        const detailYolo = document.getElementById('detail-yolo');
+        const detailPresence = document.getElementById('detail-presence');
+        const modalLogTrail = document.getElementById('modal-log-trail');
+        const modalRemarks = document.getElementById('modal-remarks');
+        const btnSaveDisposition = document.getElementById('btn-save-disposition');
+
+        const systemToast = document.getElementById('system-toast');
+        const toastTitle = document.getElementById('toast-title');
+        const toastDesc = document.getElementById('toast-desc');
+
+        // Polling state – avoid redundant re-renders
+        let lastCountersHash = '';
+        let lastAlertsHash = '';
+        let pollTimer = null;
+
+        function hashStr(obj) {
+            return JSON.stringify(obj);
+        }
+
+        // Initial setup
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchSystemData();
+
+            // Set up start/end transaction button clicks
+            btnStartTxn.addEventListener('click', startTransactionSimulation);
+            btnEndTxn.addEventListener('click', endTransactionSimulation);
+
+            // Set up modal close
+            btnCloseModal.addEventListener('click', closeModal);
+
+            // Set up disposition buttons
+            document.querySelectorAll('.btn-disp').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.btn-disp').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedOutcome = btn.dataset.outcome;
+                });
+            });
+
+            btnSaveDisposition.addEventListener('click', saveDisposition);
+
+            // Poll every 5 seconds (was 3s) — reduces server load and DOM churn
+            pollTimer = setInterval(fetchSystemData, 5000);
+        });
+
+        function renderLiveStreams() {
+            // Live streams have been removed from the UI per requirement
+            return;
+        }
+
+        function showToast(title, desc, type) {
+            toastTitle.innerText = title;
+            toastDesc.innerText = desc;
+            systemToast.className = 'toast show ' + (type || 'low');
+            setTimeout(() => {
+                systemToast.classList.remove('show');
+            }, 4000);
+        }
+
+        function fetchSystemData() {
+            // Sequential: counters first, then alerts (avoids parallel fetch race)
+            fetch('/api/v1/counters')
+                .then(res => res.json())
+                .then(data => {
+                    const h = hashStr(data);
+                    if (h !== lastCountersHash) {
+                        lastCountersHash = h;
+                        counters = data;
+                        renderCounters();
+                    }
+                    // Chain alerts fetch after counters to reduce simultaneous requests
+                    return fetch('/api/v1/alerts');
+                })
+                .then(res => res.json())
+                .then(data => {
+                    // Filter out failed transactions entirely from the UI, except for monitoring gaps
+                    data = data.filter(a => a.recording_status !== 'Failed' || a.flag === 'monitoring_gap');
+
+                    const h = hashStr(data);
+                    const changed = h !== lastAlertsHash;
+                    if (changed) {
+                        // Check if a new alert was raised to show toast
+                        if (alerts.length > 0 && data.length > alerts.length) {
+                            const newAlert = data[0];
+                            if (newAlert.risk_score === 'High') {
+                                showToast('🚨 High Risk Alert Triggered', `${newAlert.action_type} at ${newAlert.counter_id} by ${newAlert.staff_id}`, 'high');
+                            } else if (newAlert.flag === 'monitoring_gap') {
+                                showToast('⚠️ Monitoring Gap Detected', `Camera offline for transaction ${newAlert.transaction_id}`, 'gap');
+                            }
+                        }
+                        lastAlertsHash = h;
+                        alerts = data;
+                        renderAlerts();
+                        renderClipsSidebar();
+                        updateKPIs();
+                    }
+
+                    // Always check modal video status even if alert data is unchanged
+                    if (selectedAlertId) {
+                        const activeAlert = alerts.find(a => a.id === selectedAlertId);
+                        if (activeAlert && activeAlert.recording_status === 'Ready' && videoOverlay.style.display !== 'none') {
+                            updateModalVideo(activeAlert);
+                        }
+                    }
+                })
+                .catch(err => console.warn('Poll error:', err));
+        }
+
+        function renderCounters() {
+            // Keep selected value
+            const currentSelection = simCounterSelect.value;
+
+            // Build options
+            simCounterSelect.innerHTML = '';
+            counters.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.counter_id;
+                const isOffline = c.health.toLowerCase() === 'offline';
+                opt.innerText = `${c.counter_id} (${c.camera_id})${isOffline ? ' — [OFFLINE]' : ''}`;
+                simCounterSelect.appendChild(opt);
+            });
+
+            if (currentSelection && counters.some(c => c.counter_id === currentSelection)) {
+                simCounterSelect.value = currentSelection;
+            } else {
+                const firstOnline = counters.find(c => c.health.toLowerCase() === 'online');
+                if (firstOnline) {
+                    simCounterSelect.value = firstOnline.counter_id;
+                }
+            }
+
+            // Build dashboard sidebar list cards
+            countersList.innerHTML = '';
+            counters.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'counter-card';
+                card.innerHTML = `
+                    <div class="counter-info">
+                        <div class="counter-name">${c.counter_id}</div>
+                        <div class="counter-camera">Camera: ${c.camera_id}</div>
+                    </div>
+                    <div class="counter-status">
+                        <span class="health-indicator ${c.health.toLowerCase()}">${c.health}</span>
+                        <button class="subscription-switch ${c.subscription ? 'active' : ''}" onclick="toggleSubscription('${c.counter_id}')">
+                            Sub: ${c.subscription ? 'Y' : 'N'}
+                        </button>
+                    </div>
+                `;
+                countersList.appendChild(card);
+            });
+
+            // Also build rich cards for Analytics tab
+            const anList = document.getElementById('an-counters-list');
+            if (!anList) return;
+            anList.innerHTML = '';
+            counters.forEach(c => {
+                const isOnline = c.health.toLowerCase() === 'online';
+                const alertCount = alerts.filter(a => a.counter_id === c.counter_id && a.reviewer_status === 'Pending').length;
+                const card = document.createElement('div');
+                card.className = 'an-counter-card';
+                card.innerHTML = `
+                    <div class="an-counter-cam-badge">${c.camera_id}</div>
+                    <div class="an-counter-info">
+                        <div class="an-counter-name">${c.counter_id}</div>
+                        <div class="an-counter-meta">
+                            Sub: <strong style="color:${c.subscription ? '#818cf8' : 'var(--text-muted)'};">${c.subscription ? 'Active (Y)' : 'Inactive (N)'}</strong>
+                            ${alertCount > 0 ? `&nbsp;·&nbsp;<span style="color:var(--color-high);font-weight:600;">${alertCount} pending</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="an-counter-right">
+                        <span class="health-indicator ${c.health.toLowerCase()}">${c.health}</span>
+                        <button class="subscription-switch ${c.subscription ? 'active' : ''}" onclick="toggleSubscription('${c.counter_id}')" style="font-size:10px; padding:3px 8px;">
+                            ${c.subscription ? 'Recording' : 'Log Only'}
+                        </button>
+                    </div>
+                `;
+                anList.appendChild(card);
+            });
+
+        }
+
+        function toggleSubscription(counterId) {
+            const counter = counters.find(c => c.counter_id === counterId);
+            if (!counter) return;
+
+            const newStatus = !counter.subscription;
+
+            fetch(`/api/v1/counters/${counterId}/subscription`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ active: newStatus })
+            })
+                .then(res => res.json())
+                .then(() => {
+                    fetchSystemData();
+                });
+        }
+
+        function renderAlerts() {
+            alertQueueBody.innerHTML = '';
+            // Render non-escalated alerts in main queue
+            const triageAlerts = alerts.filter(a => a.reviewer_status !== 'Escalated');
+
+            if (triageAlerts.length === 0) {
+                alertQueueBody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">No alerts pending triage.</td></tr>`;
+            } else {
+                triageAlerts.forEach(a => {
+                    const tr = document.createElement('tr');
+
+                    let riskBadge = '';
+                    if (a.flag === 'monitoring_gap') {
+                        riskBadge = `<span class="badge gap">Monitoring Gap</span>`;
+                    } else {
+                        riskBadge = `<span class="badge ${a.risk_score.toLowerCase()}">${a.risk_score}</span>`;
+                    }
+
+                    let aiStatusBadge = '';
+                    if (a.recording_status === 'Recording') {
+                        aiStatusBadge = `<span class="badge" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);">🔴 Recording</span>`;
+                    } else if (a.recording_status === 'Processing') {
+                        aiStatusBadge = `<span class="badge" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3);">⚙️ Analyzing</span>`;
+                    } else if (a.recording_status === 'Ready') {
+                        if (a.flag === 'monitoring_gap') {
+                            aiStatusBadge = `<span class="badge gap">📡 Gap</span>`;
+                        } else if (a.person_present || a.flag === 'clean') {
+                            aiStatusBadge = `<span class="badge low">🟢 Clean</span>`;
+                        } else {
+                            aiStatusBadge = `<span class="badge high">🚨 Alert</span>`;
+                        }
+                    } else {
+                        aiStatusBadge = `<span class="badge" style="background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3);">Log Only</span>`;
+                    }
+
+                    let actionDetail = `${a.action_type}`;
+                    if (a.reviewer_remarks && a.reviewer_remarks.trim().length > 0) {
+                        actionDetail += `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📝 ${a.reviewer_remarks}</div>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td><strong>${a.module}</strong></td>
+                        <td>${a.staff_id}</td>
+                        <td>${actionDetail}</td>
+                        <td>${riskBadge}</td>
+                        <td>${aiStatusBadge}</td>
+                        <td>${a.counter_id}</td>
+                        <td style="font-size: 12px; color: var(--text-muted);">${formatTimestamp(a.timestamp)}</td>
+                        <td>
+                            <span style="font-size: 12px; font-weight: 600; color: ${getReviewerColor(a.reviewer_status)}">${a.reviewer_status}</span>
+                        </td>
+                        <td>
+                            <button class="btn-table" onclick="openInvestigation(${a.id})">Investigate</button>
+                        </td>
+                    `;
+                    alertQueueBody.appendChild(tr);
+                });
+            }
+
+            // Render Escalations Panel
+            escalatedQueue.innerHTML = '';
+            const escalatedAlerts = alerts.filter(a => a.reviewer_status === 'Escalated');
+
+            if (escalatedAlerts.length === 0) {
+                escalatedQueue.innerHTML = `<div style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">No escalated cases currently active.</div>`;
+            } else {
+                escalatedAlerts.forEach(a => {
+                    const item = document.createElement('div');
+                    item.className = 'escalated-item';
+                    item.innerHTML = `
+                        <div class="escalated-info">
+                            <span class="escalated-status">Escalated</span>
+                            <strong>${a.action_type} - ${a.counter_id}</strong>
+                            <span style="font-size: 11px; color: var(--text-muted);">Staff: ${a.staff_id} | Triage Time: ${formatTimestamp(a.reviewer_time)}</span>
+                        </div>
+                        <button class="btn-table" onclick="openInvestigation(${a.id})">Review Case</button>
+                    `;
+                    escalatedQueue.appendChild(item);
+                });
+            }
+
+            // Render Individual Risk Classifications
+            ['High', 'Medium', 'Low'].forEach(risk => {
+                const list = document.getElementById(`an-${risk.toLowerCase()}-alerts`);
+                if (list) {
+                    list.innerHTML = '';
+                    const riskAlerts = alerts.filter(a => a.risk_score === risk && a.flag !== 'monitoring_gap');
+                    if (riskAlerts.length === 0) {
+                        list.innerHTML = '<div style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">None active.</div>';
+                    } else {
+                        riskAlerts.forEach(a => {
+                            const item = document.createElement('div');
+                            item.className = 'an-spec-row';
+                            item.innerHTML = `<span>${a.action_type} - ${a.counter_id}</span><strong>${formatTimeOnly(a.timestamp)}</strong>`;
+                            list.appendChild(item);
+                        });
+                    }
+                }
+            });
+
+            // Render Gap Alerts
+            const gapList = document.getElementById('an-gap-alerts');
+            if (gapList) {
+                gapList.innerHTML = '';
+                const gapAlerts = alerts.filter(a => a.flag === 'monitoring_gap');
+                if (gapAlerts.length === 0) {
+                    gapList.innerHTML = '<div style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">None active.</div>';
+                } else {
+                    gapAlerts.forEach(a => {
+                        const item = document.createElement('div');
+                        item.className = 'an-spec-row';
+                        item.style.borderLeft = '3px solid var(--color-gap)';
+                        item.innerHTML = `<span>Camera Offline: ${a.counter_id}</span><strong>${formatTimeOnly(a.timestamp)}</strong>`;
+                        gapList.appendChild(item);
+                    });
+                }
+            }
+
+            // Render Alert Raised and Clean Section
+            const alertRaisedList = document.getElementById('an-alert-raised');
+            if (alertRaisedList) {
+                alertRaisedList.innerHTML = '';
+                const pendingAlerts = alerts.filter(a => a.reviewer_status === 'Pending');
+                if (pendingAlerts.length === 0) {
+                    alertRaisedList.innerHTML = '<div style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">No alerts raised.</div>';
+                } else {
+                    pendingAlerts.forEach(a => {
+                        const item = document.createElement('div');
+                        item.className = 'an-spec-row';
+                        item.innerHTML = `<span>${a.action_type} - ${a.counter_id}</span><strong>${formatTimeOnly(a.timestamp)}</strong>`;
+                        alertRaisedList.appendChild(item);
+                    });
+                }
+            }
+
+            const cleanSectionList = document.getElementById('an-clean-section');
+            if (cleanSectionList) {
+                cleanSectionList.innerHTML = '';
+                const cleanSecAlerts = alerts.filter(a => a.reviewer_status === 'Verified-Clean' || a.reviewer_status === 'Auto-Cleared');
+                if (cleanSecAlerts.length === 0) {
+                    cleanSectionList.innerHTML = '<div style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">No clean records.</div>';
+                } else {
+                    cleanSecAlerts.forEach(a => {
+                        const item = document.createElement('div');
+                        item.className = 'an-spec-row';
+                        item.innerHTML = `<span>${a.action_type} - ${a.counter_id}</span><strong>${formatTimeOnly(a.timestamp)}</strong>`;
+                        cleanSectionList.appendChild(item);
+                    });
+                }
+            }
+
+            // Render Verified Clean and Discrepancy
+            const cleanList = document.getElementById('an-verified-clean');
+            if (cleanList) {
+                cleanList.innerHTML = '';
+                const cleanAlerts = alerts.filter(a => a.reviewer_status === 'Verified-Clean');
+                if (cleanAlerts.length === 0) {
+                    cleanList.innerHTML = '<div style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">No clean logs.</div>';
+                } else {
+                    cleanAlerts.forEach(a => {
+                        const item = document.createElement('div');
+                        item.className = 'an-spec-row';
+                        item.innerHTML = `<span>${a.action_type}</span><strong>${a.staff_id}</strong>`;
+                        cleanList.appendChild(item);
+                    });
+                }
+            }
+
+            const discList = document.getElementById('an-verified-disc');
+            if (discList) {
+                discList.innerHTML = '';
+                const discAlerts = alerts.filter(a => a.reviewer_status === 'Verified-Discrepancy');
+                if (discAlerts.length === 0) {
+                    discList.innerHTML = '<div style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">No discrepancies.</div>';
+                } else {
+                    discAlerts.forEach(a => {
+                        const item = document.createElement('div');
+                        item.className = 'an-spec-row';
+                        item.innerHTML = `<span>${a.action_type}</span><strong>${a.staff_id}</strong>`;
+                        discList.appendChild(item);
+                    });
+                }
+            }
+        }
+
+        // Render the Recorded Clips left sidebar
+        function renderClipsSidebar() {
+            clipsSidebarList.innerHTML = '';
+
+            // Filter alerts that have video records (either recording, ready, processing or failed)
+            const alertsWithClips = alerts.filter(a => a.clip_id && a.clip_id.trim().length > 0);
+
+            if (alertsWithClips.length === 0) {
+                clipsSidebarList.innerHTML = `<div style="text-align: center; font-size: 12px; color: var(--text-muted); padding: 20px;">No clips recorded yet.</div>`;
+                return;
+            }
+
+            alertsWithClips.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'clip-card';
+                card.onclick = () => openInvestigation(a.id, true);
+
+                let statusText = '';
+                let statusStyle = '';
+
+                if (a.recording_status === 'Recording') {
+                    statusText = '🔴 Recording';
+                    statusStyle = 'color: var(--color-high); animation: pulse 1.5s infinite;';
+                } else if (a.recording_status === 'Processing') {
+                    statusText = '⚙️ Analyzing';
+                    statusStyle = 'color: var(--color-medium);';
+                } else if (a.recording_status === 'Ready') {
+                    statusText = a.person_present ? '🟢 Clean' : '🚨 Alert';
+                    statusStyle = a.person_present ? 'color: var(--color-low);' : 'color: var(--color-high); font-weight: bold;';
+                } else {
+                    statusText = '❌ Failed';
+                    statusStyle = 'color: var(--text-muted);';
+                }
+
+                card.innerHTML = `
+                    <div class="clip-header">
+                        <span>ID: ${a.clip_id.substring(5, 13)}...</span>
+                        <span>${formatTimeOnly(a.timestamp)}</span>
+                    </div>
+                    <div class="clip-body">${a.counter_id}</div>
+                    <div class="clip-footer">
+                        <span style="font-size: 11px; color: var(--text-muted);">${a.action_type}</span>
+                        <span style="font-size: 12px; ${statusStyle}">${statusText}</span>
+                    </div>
+                `;
+                clipsSidebarList.appendChild(card);
+            });
+        }
+
+        function formatTimestamp(isoStr) {
+            if (!isoStr) return '-';
+            try {
+                const date = new Date(isoStr);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ' + date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            } catch (e) {
+                return isoStr;
+            }
+        }
+
+        function formatTimeOnly(isoStr) {
+            if (!isoStr) return '-';
+            try {
+                const date = new Date(isoStr);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            } catch (e) {
+                return isoStr;
+            }
+        }
+
+        function getReviewerColor(status) {
+            if (status === 'Verified-Clean') return '#10b981';
+            if (status === 'Verified-Discrepancy') return '#f59e0b';
+            if (status === 'Escalated') return '#ef4444';
+            return '#94a3b8';
+        }
+
+        function updateKPIs() {
+            // Count risk stats
+            const highCount = alerts.filter(a => a.risk_score === 'High' && a.flag !== 'monitoring_gap').length;
+            const mediumCount = alerts.filter(a => a.risk_score === 'Medium').length;
+            const lowCount = alerts.filter(a => a.risk_score === 'Low').length;
+            const gapCount = alerts.filter(a => a.flag === 'monitoring_gap').length;
+
+            kpiHigh.innerText = highCount;
+            kpiMedium.innerText = mediumCount;
+            kpiLow.innerText = lowCount;
+            kpiGap.innerText = gapCount;
+
+            // Calculate Avg TAT
+            const verifiedAlerts = alerts.filter(a => a.reviewer_time && a.timestamp);
+            let tatStr = '0.0s';
+            if (verifiedAlerts.length > 0) {
+                let totalTime = 0;
+                verifiedAlerts.forEach(a => {
+                    const start = new Date(a.timestamp);
+                    const end = new Date(a.reviewer_time);
+                    totalTime += (end - start) / 1000.0;
+                });
+                tatStr = (totalTime / verifiedAlerts.length).toFixed(1) + 's';
+            }
+            kpiTat.innerText = tatStr;
+
+            // Sync Analytics tab KPIs
+            const anHigh = document.getElementById('an-kpi-high');
+            const anMed = document.getElementById('an-kpi-medium');
+            const anGap = document.getElementById('an-kpi-gap');
+            const anTat = document.getElementById('an-kpi-tat');
+            if (anHigh) anHigh.innerText = highCount;
+            if (anMed) anMed.innerText = mediumCount;
+            if (anGap) anGap.innerText = gapCount;
+            if (anTat) anTat.innerText = tatStr;
+
+            // Disposition breakdown
+            const cleanCount = alerts.filter(a => a.reviewer_status === 'Verified-Clean').length;
+            const discCount = alerts.filter(a => a.reviewer_status === 'Verified-Discrepancy').length;
+            const escCount = alerts.filter(a => a.reviewer_status === 'Escalated').length;
+            const pendingCount = alerts.filter(a => a.reviewer_status === 'Pending').length;
+            const el = (id) => document.getElementById(id);
+            if (el('an-count-clean')) el('an-count-clean').innerText = cleanCount;
+            if (el('an-count-disc')) el('an-count-disc').innerText = discCount;
+            if (el('an-count-esc')) el('an-count-esc').innerText = escCount;
+            if (el('an-count-pending')) el('an-count-pending').innerText = pendingCount;
+        }
+
+        // Start Transaction Simulation
+        function startTransactionSimulation() {
+            btnStartTxn.disabled = true;
+            btnStartTxn.innerText = 'Starting...';
+
+            const payload = {
+                staff_id: document.getElementById('sim-staff').value,
+                counter_id: document.getElementById('sim-counter').value,
+                module: document.getElementById('sim-module').value,
+                action_type: document.getElementById('sim-action').value,
+                subscription: document.getElementById('sim-subscription').value
+            };
+
+            fetch('/api/v1/transaction/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'recording_started') {
+                        activeTransactionId = data.transaction_id;
+                        try { localStorage.setItem('active_transaction_id', activeTransactionId); } catch (e) { }
+                        btnEndTxn.disabled = false;
+                        btnStartTxn.innerText = 'Started';
+                        showToast('🔴 Recording Started', `Recording transaction ${activeTransactionId} at empty counter.`, 'high');
+                    } else if (data.status === 'logged_only') {
+                        activeTransactionId = null;
+                        try { localStorage.removeItem('active_transaction_id'); } catch (e) { }
+                        btnStartTxn.disabled = false;
+                        btnStartTxn.innerText = 'Start';
+                        showToast('Logged (Sub=N)', 'Transaction logged in database, no video captured.', 'low');
+                    } else if (data.status === 'monitoring_gap') {
+                        activeTransactionId = null;
+                        try { localStorage.removeItem('active_transaction_id'); } catch (e) { }
+                        btnStartTxn.disabled = false;
+                        btnStartTxn.innerText = 'Start';
+                        showToast('⚠️ Monitoring Gap', 'Camera offline. Raised gap alert.', 'gap');
+                    }
+                    fetchSystemData();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Error', 'Failed to start transaction simulation.', 'high');
+                    btnStartTxn.disabled = false;
+                    btnStartTxn.innerText = 'Start';
+                });
+        }
+
+        // End Transaction Simulation
+        function endTransactionSimulation() {
+            if (!activeTransactionId) {
+                try { activeTransactionId = localStorage.getItem('active_transaction_id'); } catch (e) { }
+            }
+            if (!activeTransactionId) {
+                alert('No active transaction to stop.');
+                return;
+            }
+
+            btnEndTxn.disabled = true;
+            btnEndTxn.innerText = 'Stopping...';
+
+            const amountVal = parseFloat(document.getElementById('sim-amount').value) || 0;
+
+            fetch('/api/v1/transaction/end', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transaction_id: activeTransactionId,
+                    amount: amountVal
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    showToast('⚙️ Analysis Triggered', `Finalizing clip for ${activeTransactionId} (Amount: ₹${amountVal}) and running AI analysis.`, 'low');
+                    activeTransactionId = null;
+                    try { localStorage.removeItem('active_transaction_id'); } catch (e) { }
+                    btnStartTxn.disabled = false;
+                    btnStartTxn.innerText = 'Start';
+                    btnEndTxn.innerText = 'End';
+                    fetchSystemData();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Error', 'Failed to end transaction simulation.', 'high');
+                    btnEndTxn.disabled = false;
+                    btnEndTxn.innerText = 'End';
+                });
+        }
+
+        function openInvestigation(alertId, isReadOnly = false) {
+            selectedAlertId = alertId;
+            const alert = alerts.find(a => a.id === alertId);
+            if (!alert) return;
+
+            const dispSection = document.getElementById('modal-disposition-section');
+            const remarksSection = document.getElementById('modal-remarks-section');
+
+            if (isReadOnly) {
+                modalTitle.innerText = `${alert.action_type} - Recorded Clip View`;
+                if (remarksSection) remarksSection.style.display = 'none';
+                if (dispSection) dispSection.style.display = 'none';
+                btnSaveDisposition.style.display = 'none';
+            } else {
+                modalTitle.innerText = `${alert.action_type} Investigation`;
+                modalRemarks.readOnly = false;
+                if (remarksSection) remarksSection.style.display = 'block';
+                if (dispSection) dispSection.style.display = 'block';
+                btnSaveDisposition.style.display = 'block';
+            }
+
+            modalTxnId.innerText = `Transaction ID: ${alert.transaction_id}`;
+            detailStaff.innerText = alert.staff_id;
+            detailCounter.innerText = alert.counter_id;
+            detailModule.innerText = alert.module;
+            detailAction.innerText = `${alert.action_type} (₹${alert.amount})`;
+
+            detailRiskTag.className = 'badge ' + (alert.flag === 'monitoring_gap' ? 'gap' : alert.risk_score.toLowerCase());
+            detailRiskTag.innerText = alert.flag === 'monitoring_gap' ? 'Monitoring Gap' : alert.risk_score;
+
+            detailCameraHealth.innerText = alert.camera_health;
+
+            // Resolve camera_id for live stream toggle
+            const counter = counters.find(c => c.counter_id === alert.counter_id);
+            currentAlertCameraId = (counter && counter.camera_id) ? counter.camera_id : null;
+
+            // Remarks and outcome buttons
+            modalRemarks.value = alert.reviewer_remarks || '';
+            selectedOutcome = alert.reviewer_status;
+
+            document.querySelectorAll('.btn-disp').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.outcome === alert.reviewer_status) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Audit logs
+            modalLogTrail.innerHTML = '';
+            let startTime = formatTimeOnly(alert.timestamp);
+            let endTime = 'Active';
+            const logs = alert.audit_logs ? JSON.parse(alert.audit_logs) : [];
+            logs.forEach(l => {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `<span>[${l.time}]</span> ${l.msg}`;
+                modalLogTrail.appendChild(entry);
+                if (l.msg.includes('Transaction ended')) {
+                    endTime = l.time;
+                }
+            });
+            document.getElementById('detail-start-time').innerText = startTime;
+            document.getElementById('detail-end-time').innerText = endTime;
+
+            // Video setups
+            updateModalVideo(alert);
+
+            investigateModal.style.display = 'flex';
+        }
+
+        function updateModalVideo(alert) {
+            modalVideoPlayer.pause();
+
+            if (alert.flag === 'monitoring_gap' || alert.camera_health === 'offline') {
+                videoOverlay.style.display = 'flex';
+                document.querySelector('.video-spinner').style.display = 'none';
+                videoStatusText.innerText = '⚠️ Video clip unavailable: Camera offline / Monitoring Gap';
+                modalVideoPlayer.style.display = 'none';
+
+                detailYolo.innerText = 'N/A';
+                detailPresence.innerText = 'N/A';
+            } else if (alert.recording_status === 'Recording' || alert.recording_status === 'Processing') {
+                videoOverlay.style.display = 'flex';
+                document.querySelector('.video-spinner').style.display = 'block';
+                videoStatusText.innerText = `Inference Node: Capturing buffers / AI Running (${alert.recording_status})...`;
+                modalVideoPlayer.style.display = 'none';
+
+                detailYolo.innerText = 'Analyzing...';
+                detailPresence.innerText = 'Analyzing...';
+            } else if (alert.recording_status === 'Ready') {
+                videoOverlay.style.display = 'none';
+                modalVideoPlayer.style.display = 'block';
+
+                // Select target clip URL (inferred clip vs raw clip)
+                let targetSrc = alert.clip_url || '';
+                if (currentVideoMode === 'inferred' && alert.inferred_clip_url) {
+                    targetSrc = alert.inferred_clip_url;
+                }
+
+                if (targetSrc && videoSource.src !== window.location.origin + targetSrc && videoSource.src !== targetSrc) {
+                    videoSource.src = targetSrc;
+                    modalVideoPlayer.load();
+                }
+
+                detailYolo.innerText = alert.person_present ? `Person Present (x${alert.person_count})` : 'Counter Empty (No Person)';
+                detailPresence.innerText = alert.presence_duration_sec ? `${((alert.presence_duration_sec / alert.clip_duration_sec) * 100).toFixed(0)}% duration` : '0% duration';
+
+                // Draw ROI on modal canvas for raw recorded mode (inferred mode already has baked ROI & boxes)
+                const modalCanvas = document.getElementById('modal-roi-canvas');
+                const ctx = modalCanvas.getContext('2d');
+                ctx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
+
+                if (currentVideoMode === 'recorded') {
+                    const counter = counters.find(c => c.counter_id === alert.counter_id);
+                    if (counter && counter.camera_id) {
+                        fetch(`/api/v1/roi/${counter.camera_id}`)
+                            .then(r => r.json())
+                            .then(data => {
+                                if (data.rois && data.rois.length > 0) {
+                                    modalCanvas.width = data.config_width || 1280;
+                                    modalCanvas.height = data.config_height || 720;
+
+                                    data.rois.forEach(roi => {
+                                        if (!roi.coords || roi.coords.length < 6) return;
+                                        ctx.beginPath();
+                                        ctx.moveTo(roi.coords[0], roi.coords[1]);
+                                        for (let i = 2; i < roi.coords.length; i += 2) {
+                                            ctx.lineTo(roi.coords[i], roi.coords[i + 1]);
+                                        }
+                                        ctx.closePath();
+                                        ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                                        ctx.fill();
+                                        ctx.strokeStyle = '#10b981';
+                                        ctx.lineWidth = 2;
+                                        ctx.stroke();
+                                        // Label
+                                        ctx.fillStyle = '#10b981';
+                                        ctx.font = 'bold 18px Outfit';
+                                        ctx.fillText(roi.name, roi.coords[0] + 6, Math.max(22, roi.coords[1] - 8));
+                                    });
+                                }
+                            })
+                            .catch(err => console.error('Failed to load ROI for modal:', err));
+                    }
+                }
+            } else {
+                videoOverlay.style.display = 'flex';
+                document.querySelector('.video-spinner').style.display = 'none';
+                videoStatusText.innerText = '❌ Failed to process video recording clip.';
+                modalVideoPlayer.style.display = 'none';
+
+                detailYolo.innerText = 'Error';
+                detailPresence.innerText = 'Error';
+            }
+        }
+
+        function closeModal() {
+            modalVideoPlayer.pause();
+            // Clean up WebRTC iframe to stop the stream
+            const webrtcIframe = document.getElementById('webrtc-iframe');
+            if (webrtcIframe) webrtcIframe.src = '';
+            // Reset to default inferred mode
+            switchVideoMode('inferred');
+            investigateModal.style.display = 'none';
+            selectedAlertId = null;
+            selectedOutcome = null;
+        }
+
+        // Current video mode for investigation modal: 'inferred' | 'recorded' | 'live'
+        let currentVideoMode = 'inferred';
+        let currentAlertCameraId = null;
+
+        function switchVideoMode(mode) {
+            currentVideoMode = mode;
+            const btnInferred = document.getElementById('btn-mode-inferred');
+            const btnRecorded = document.getElementById('btn-mode-recorded');
+            const btnLive = document.getElementById('btn-mode-live');
+            const recordedContainer = document.getElementById('recorded-video-container');
+            const webrtcContainer = document.getElementById('webrtc-container');
+            const webrtcOfflineMsg = document.getElementById('webrtc-offline-msg');
+            const webrtcIframe = document.getElementById('webrtc-iframe');
+            const hintText = document.getElementById('video-hint-text');
+
+            if (btnInferred) btnInferred.classList.remove('active');
+            if (btnRecorded) btnRecorded.classList.remove('active');
+            if (btnLive) btnLive.classList.remove('active');
+
+            if (mode === 'inferred' || mode === 'recorded') {
+                if (mode === 'inferred' && btnInferred) btnInferred.classList.add('active');
+                if (mode === 'recorded' && btnRecorded) btnRecorded.classList.add('active');
+
+                recordedContainer.style.display = 'block';
+                webrtcContainer.style.display = 'none';
+                webrtcOfflineMsg.style.display = 'none';
+                if (webrtcIframe) webrtcIframe.src = '';
+
+                if (mode === 'inferred') {
+                    hintText.innerHTML = '🤖 Showing AI-inferred clip with ROI polygon overlay and person bounding boxes.';
+                } else {
+                    hintText.innerHTML = '📹 Showing raw camera clip recorded around the transaction timestamp.';
+                }
+
+                if (selectedAlertId) {
+                    const alert = alerts.find(a => a.id === selectedAlertId);
+                    if (alert) updateModalVideo(alert);
+                }
+            } else if (mode === 'live') {
+                if (btnLive) btnLive.classList.add('active');
+                recordedContainer.style.display = 'none';
+                modalVideoPlayer.pause();
+                hintText.innerHTML = '📡 Showing live video stream from the counter\'s camera.';
+
+                // Resolve camera_id for this alert and load WebRTC
+                if (currentAlertCameraId) {
+                    loadWebRTCStream(currentAlertCameraId, webrtcContainer, webrtcOfflineMsg, webrtcIframe);
+                } else {
+                    // Resolve camera_id from counter
+                    const alert = alerts.find(a => a.id === selectedAlertId);
+                    if (alert) {
+                        const counter = counters.find(c => c.counter_id === alert.counter_id);
+                        if (counter && counter.camera_id) {
+                            currentAlertCameraId = counter.camera_id;
+                            loadWebRTCStream(counter.camera_id, webrtcContainer, webrtcOfflineMsg, webrtcIframe);
+                        } else {
+                            webrtcContainer.style.display = 'none';
+                            webrtcOfflineMsg.style.display = 'flex';
+                        }
+                    }
+                }
+            }
+        }
+
+        function loadWebRTCStream(cameraId, container, offlineMsg, iframe) {
+            fetch(`/api/v1/webrtc-url?camera_id=${cameraId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.webrtc_url) {
+                        iframe.src = data.webrtc_url;
+                        container.style.display = 'block';
+                        offlineMsg.style.display = 'none';
+                    } else {
+                        container.style.display = 'none';
+                        offlineMsg.style.display = 'flex';
+                    }
+                })
+                .catch(err => {
+                    console.warn('Failed to fetch WebRTC URL:', err);
+                    container.style.display = 'none';
+                    offlineMsg.style.display = 'flex';
+                });
+        }
+
+        function saveDisposition() {
+            if (!selectedAlertId) return;
+            if (!selectedOutcome || selectedOutcome === 'Pending') {
+                alert('Please select an action outcome (disposition) first.');
+                return;
+            }
+
+            const payload = {
+                remarks: modalRemarks.value,
+                outcome: selectedOutcome
+            };
+
+            fetch(`/api/v1/alerts/${selectedAlertId}/disposition`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    showToast('Disposition Saved', 'Successfully updated audit case verification status.', 'low');
+                    closeModal();
+                    fetchSystemData();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Error', 'Failed to save case disposition.', 'high');
+                });
+        }
+
+        // =============================================================
+        // === TAB SWITCHING ===
+        // =============================================================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+
+            if (tabId === 'tab-roi') {
+                roiInit();
+            } else if (tabId === 'tab-analytics') {
+                // Re-render escalation queue and KPIs on analytics tab
+                updateKPIs();
+                renderAlerts();
+            }
+        }
+
+        // =============================================================
+        // === ROI SETTINGS LOGIC ===
+        // =============================================================
+        let roiDrawPoints = [];       // flat array [x1,y1,x2,y2,...] in config coords
+        let roiConfigs = { rois: [], config_width: 1280, config_height: 720 };
+        let roiInitialized = false;
+
+        function roiInit() {
+            if (!roiInitialized) {
+                // Populate camera selector from counters data
+                const sel = document.getElementById('roi-camera-select');
+                sel.innerHTML = '';
+                const seenCams = new Set();
+                counters.forEach(c => {
+                    if (!seenCams.has(c.camera_id)) {
+                        seenCams.add(c.camera_id);
+                        const opt = document.createElement('option');
+                        opt.value = c.camera_id;
+                        opt.textContent = `${c.camera_id} — ${c.counter_id}`;
+                        sel.appendChild(opt);
+                    }
+                });
+                sel.addEventListener('change', () => { roiLoadConfig(); roiLoadSnapshot(); });
+                roiInitialized = true;
+            }
+            roiLoadConfig();
+            roiLoadSnapshot();
+        }
+
+        function roiLoadSnapshot() {
+            const camId = document.getElementById('roi-camera-select').value;
+            if (!camId) return;
+            const img = document.getElementById('roi-bg-image');
+            img.src = `/api/v1/roi-frame/${camId}?t=${Date.now()}`;
+        }
+
+        function roiLoadConfig() {
+            const camId = document.getElementById('roi-camera-select').value;
+            if (!camId) return;
+            fetch(`/api/v1/roi/${camId}`)
+                .then(r => r.json())
+                .then(data => {
+                    roiConfigs = {
+                        rois: data.rois || [],
+                        config_width: data.config_width || 1280,
+                        config_height: data.config_height || 720
+                    };
+                    // Update canvas internal resolution
+                    const canvas = document.getElementById('roi-draw-canvas');
+                    canvas.width = roiConfigs.config_width;
+                    canvas.height = roiConfigs.config_height;
+                    document.getElementById('roi-canvas-dims').textContent = `${roiConfigs.config_width}×${roiConfigs.config_height}`;
+                    roiDrawPoints = [];
+                    roiRenderAll();
+                })
+                .catch(err => console.error('Failed to load ROI config:', err));
+        }
+
+        function roiRenderAll() {
+            const canvas = document.getElementById('roi-draw-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw saved ROIs (green)
+            roiConfigs.rois.forEach(roi => {
+                if (!roi.coords || roi.coords.length < 6) return;
+                ctx.beginPath();
+                ctx.moveTo(roi.coords[0], roi.coords[1]);
+                for (let i = 2; i < roi.coords.length; i += 2) {
+                    ctx.lineTo(roi.coords[i], roi.coords[i + 1]);
+                }
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+                ctx.fill();
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Label
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 18px Outfit';
+                ctx.fillText(roi.name, roi.coords[0] + 6, Math.max(22, roi.coords[1] - 8));
+            });
+
+            // Draw in-progress points (amber)
+            if (roiDrawPoints.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(roiDrawPoints[0], roiDrawPoints[1]);
+                for (let i = 2; i < roiDrawPoints.length; i += 2) {
+                    ctx.lineTo(roiDrawPoints[i], roiDrawPoints[i + 1]);
+                }
+                if (roiDrawPoints.length > 4) ctx.closePath();
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+                ctx.fill();
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw point handles
+                for (let i = 0; i < roiDrawPoints.length; i += 2) {
+                    ctx.beginPath();
+                    ctx.arc(roiDrawPoints[i], roiDrawPoints[i + 1], 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+            }
+
+            // Update shape list
+            roiRenderShapeList();
+        }
+
+        function roiRenderShapeList() {
+            const list = document.getElementById('roi-shape-list');
+            const badge = document.getElementById('roi-count-badge');
+            if (roiConfigs.rois.length === 0) {
+                list.innerHTML = '<div style="text-align: center; font-size: 12px; color: var(--text-muted); padding: 16px; font-style: italic;">No ROIs configured</div>';
+                badge.textContent = '';
+                return;
+            }
+            badge.textContent = `(${roiConfigs.rois.length})`;
+            list.innerHTML = '';
+            roiConfigs.rois.forEach(roi => {
+                const item = document.createElement('div');
+                item.className = 'roi-shape-item';
+                item.innerHTML = `
+                    <span><span class="roi-dot"></span><strong>${roi.name}</strong> — ${roi.coords.length / 2} pts</span>
+                    <button class="roi-delete-btn" onclick="roiDeleteShape('${roi.name}')" title="Delete this ROI">×</button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // Canvas click handler
+        document.getElementById('roi-draw-canvas').addEventListener('click', function (e) {
+            const rect = this.getBoundingClientRect();
+            const scaleX = roiConfigs.config_width / rect.width;
+            const scaleY = roiConfigs.config_height / rect.height;
+            const x = Math.round((e.clientX - rect.left) * scaleX);
+            const y = Math.round((e.clientY - rect.top) * scaleY);
+            roiDrawPoints.push(x, y);
+            roiRenderAll();
+        });
+
+        // Right-click to cancel drawing
+        document.getElementById('roi-draw-canvas').addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            roiDrawPoints = [];
+            roiRenderAll();
+        });
+
+        function roiClearDrawing() {
+            roiDrawPoints = [];
+            roiRenderAll();
+        }
+
+        function roiSaveShape() {
+            const nameInput = document.getElementById('roi-name-input');
+            const name = nameInput.value.trim().replace(/\s+/g, '_');
+            if (!name) { alert('Please enter a name for this ROI.'); return; }
+            if (roiDrawPoints.length < 6) { alert('ROI requires at least 3 points. Click on the canvas to add vertices.'); return; }
+
+            // Remove existing with same name
+            roiConfigs.rois = roiConfigs.rois.filter(r => r.name !== name);
+            roiConfigs.rois.push({ name: name, coords: [...roiDrawPoints] });
+            roiDrawPoints = [];
+            nameInput.value = '';
+            roiRenderAll();
+            roiShowStatus('Shape saved locally. Click "Save to Database" to persist.', '#f59e0b');
+        }
+
+        function roiDeleteShape(name) {
+            roiConfigs.rois = roiConfigs.rois.filter(r => r.name !== name);
+            roiRenderAll();
+        }
+
+        function roiRemoveAll() {
+            if (roiConfigs.rois.length === 0) return;
+            if (!confirm('Remove all ROIs for this camera?')) return;
+            roiConfigs.rois = [];
+            roiDrawPoints = [];
+            roiRenderAll();
+        }
+
+        function roiSaveToDatabase() {
+            const camId = document.getElementById('roi-camera-select').value;
+            if (!camId) return;
+
+            const payload = {
+                rois: roiConfigs.rois.map(r => ({ name: r.name, coords: r.coords })),
+                config_width: roiConfigs.config_width,
+                config_height: roiConfigs.config_height
+            };
+
+            fetch(`/api/v1/roi/${camId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        roiShowStatus(`✓ Saved ${data.count} ROI(s) to database for ${camId}`, '#10b981');
+                        showToast('ROI Saved', `${data.count} ROI(s) saved for ${camId}`, 'low');
+                    } else {
+                        roiShowStatus('Failed to save ROI config.', '#ef4444');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    roiShowStatus('Error saving ROI config.', '#ef4444');
+                });
+        }
+
+        function roiShowStatus(msg, color) {
+            const el = document.getElementById('roi-status-message');
+            el.innerHTML = `<div class="roi-status-msg" style="background: ${color}15; color: ${color}; border: 1px solid ${color}33; margin-top: 10px;">${msg}</div>`;
+            setTimeout(() => { el.innerHTML = ''; }, 4000);
+        }
+    </script>
+</body>
+
+</html>

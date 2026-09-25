@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCare | Risk-Based Action Tracking & Proactive Monitoring</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(22, 28, 45, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+            
+            --color-high: #ef4444;
+            --color-high-glow: rgba(239, 68, 68, 0.35);
+            
+            --color-medium: #f59e0b;
+            --color-medium-glow: rgba(245, 158, 11, 0.35);
+            
+            --color-low: #10b981;
+            --color-low-glow: rgba(16, 185, 129, 0.35);
+            
+            --color-gap: #6366f1;
+            --color-gap-glow: rgba(99, 102, 241, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px var(--primary-glow);
+            font-family: 'Outfit', sans-serif;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .logo-title {
+            font-size: 22px;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-title span {
+            color: var(--text-muted);
+            font-weight: 300;
+            font-size: 14px;
+            display: block;
+            margin-top: -2px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--color-low);
+            box-shadow: 0 0 10px var(--color-low);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .container {
+            max-width: 1750px;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 300px 350px 1fr;
+            gap: 24px;
+        }
+
+        /* Glass Panel Styling */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* KPI Strip */
+        .kpi-strip {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .kpi-card.high::before { background-color: var(--color-high); }
+        .kpi-card.medium::before { background-color: var(--color-medium); }
+        .kpi-card.low::before { background-color: var(--color-low); }
+        .kpi-card.gap::before { background-color: var(--color-gap); }
+        .kpi-card.tat::before { background-color: var(--primary); }
+
+        .kpi-val {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            line-height: 1;
+        }
+
+        .kpi-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Left Column Controls */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Clips Sidebar items */
+        .clip-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .clip-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .clip-card .clip-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .clip-card .clip-body {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .clip-card .clip-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .btn:disabled {
+            background: #1e293b !important;
+            color: var(--text-muted) !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Table Styling */
+        .alert-queue-panel {
+            min-height: 500px;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 12px 16px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 14px;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.015);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--color-high);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.1);
+        }
+
+        .badge.medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--color-medium);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .badge.low {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-low);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge.gap {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--color-gap);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-table {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-table:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Detail Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5, 7, 12, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            width: 1000px;
+            max-width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            display: grid;
+            grid-template-columns: 550px 1fr;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .close-modal:hover {
+            color: #fff;
+        }
+
+        .modal-video-section {
+            background: #020617;
+            padding: 24px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .video-container {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .video-container video, .video-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-status-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .video-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal-info-section {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-header-title {
+            margin-bottom: 5px;
+            font-size: 22px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            background: rgba(255,255,255,0.02);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .detail-item span {
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 2px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .detail-item strong {
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .log-trail {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .log-entry {
+            margin-bottom: 6px;
+        }
+
+        .log-entry span {
+            color: var(--primary);
+        }
+
+        .disposition-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-disp {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-disp:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .btn-disp.active.clean {
+            background: var(--color-low-glow);
+            color: var(--color-low);
+            border-color: var(--color-low);
+        }
+
+        .btn-disp.active.discrepancy {
+            background: var(--color-medium-glow);
+            color: var(--color-medium);
+            border-color: var(--color-medium);
+        }
+
+        .btn-disp.active.escalate {
+            background: var(--color-high-glow);
+            color: var(--color-high);
+            border-color: var(--color-high);
+        }
+
+        /* Monitored Counters Dashboard Section */
+        .counters-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .counter-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .counter-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .counter-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .counter-camera {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .counter-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .health-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .health-indicator::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .health-indicator.online::before {
+            background: var(--color-low);
+            box-shadow: 0 0 6px var(--color-low);
+        }
+
+        .health-indicator.offline::before {
+            background: var(--color-high);
+            box-shadow: 0 0 6px var(--color-high);
+        }
+
+        .subscription-switch {
+            font-size: 12px;
+            background: rgba(255,255,255,0.05);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .subscription-switch.active {
+            background: rgba(79, 70, 229, 0.2);
+            border-color: var(--primary);
+            color: #818cf8;
+        }
+
+        /* Escalated alerts log */
+        .escalated-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .escalated-item {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .escalated-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .escalated-status {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--color-high);
+            text-transform: uppercase;
+        }
+
+        /* Live Stream Floating preview */
+        .live-preview-box {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .live-stream-card {
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+        
+        .live-stream-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .live-stream-overlay {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1e293b;
+            border-left: 4px solid var(--primary);
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.high { border-left-color: var(--color-high); }
+        .toast.gap { border-left-color: var(--color-gap); }
+        /* Responsive Layout Updates - Side-by-side that actually fits */
+        .container {
+            max-width: 100vw;
+            margin: 0 auto;
+            padding: 12px;
+            display: grid;
+            /* The minmax(0, 1fr) is the magic fix that stops the table from blowing out the screen width */
+            grid-template-columns: 220px 300px minmax(0, 1fr);
+            gap: 16px;
+        }
+        
+        .sidebar {
+            min-width: 0; /* Allows this grid child to shrink below its content size */
+            grid-column: auto !important; /* Remove any inline style interference */
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 200px 250px minmax(0, 1fr);
+                gap: 8px;
+                padding: 8px;
+            }
+        }
+        @media (max-width: 900px) {
+            .container {
+                /* If the screen gets ridiculously small, stack just the table below */
+                grid-template-columns: 1fr 1fr;
+            }
+            .sidebar:nth-child(3) {
+                grid-column: 1 / -1 !important;
+            }
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+            width: 100%;
+        }
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">SC</div>
+            <div class="logo-title">
+                SmartCare
+                <span>Risk-Based Action Tracking & Proactive Monitoring (RBATPM)</span>
+            </div>
+        </div>
+        <div class="system-status">
+            <div class="status-dot"></div>
+            VAS Connection: Online
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- KPI Strip -->
+        <div class="kpi-strip">
+            <div class="kpi-card high">
+                <span class="kpi-val" id="kpi-high">0</span>
+                <span class="kpi-label">High Risk Alerts</span>
+            </div>
+            <div class="kpi-card medium">
+                <span class="kpi-val" id="kpi-medium">0</span>
+                <span class="kpi-label">Medium Risk Alerts</span>
+            </div>
+            <div class="kpi-card low">
+                <span class="kpi-val" id="kpi-low">0</span>
+                <span class="kpi-label">Auto-Cleared Low</span>
+            </div>
+            <div class="kpi-card gap">
+                <span class="kpi-val" id="kpi-gap">0</span>
+                <span class="kpi-label">Monitoring Gaps</span>
+            </div>
+            <div class="kpi-card tat">
+                <span class="kpi-val" id="kpi-tat">0.0s</span>
+                <span class="kpi-label">Avg Turnaround Time</span>
+            </div>
+        </div>
+
+        <!-- Column 1: Recorded CCTV Clips Sidebar -->
+        <div class="sidebar" style="grid-column: 1;">
+            <div class="glass-panel" style="display: flex; flex-direction: column; min-height: 600px;">
+                <h3 class="panel-title">Recorded CCTV Clips</h3>
+                <div id="clips-sidebar-list" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: calc(100vh - 250px); padding-right: 4px;">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 2: Controls & Counters -->
+        <div class="sidebar" style="grid-column: 2;">
+            <div class="glass-panel">
+                <h3 class="panel-title">Transaction Simulator</h3>
+                <form id="simulator-form">
+                    <div class="form-group">
+                        <label for="sim-staff">Staff ID</label>
+                        <input type="text" id="sim-staff" class="form-control" value="STF102" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sim-counter">Counter / Camera Mapping</label>
+                        <select id="sim-counter" class="form-control">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sim-module">Module</label>
+                        <select id="sim-module" class="form-control">
+                            <option value="Billing">Billing Desk</option>
+                            <option value="Pharmacy">Pharmacy</option>
+                            <option value="Stores">Stores/Inventory</option>
+                            <option value="Cash Counter">Cash Counter</option>
+                            <option value="Insurance Desk">Insurance Desk</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sim-action">Action Type</label>
+                        <select id="sim-action" class="form-control">
+                            <option value="Refund">Cash Refund</option>
+                            <option value="Discount Override">Discount Override</option>
+                            <option value="Stock Issue">Inventory Issue</option>
+                            <option value="Bill Cancellation">Bill Cancellation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sim-subscription">Counter Subscription</label>
+                        <select id="sim-subscription" class="form-control">
+                            <option value="Y">Active (Y) - Trigger Video Capture</option>
+                            <option value="N">Inactive (N) - Log Only</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="sim-pre">Pre-Buffer (sec)</label>
+                            <input type="number" id="sim-pre" class="form-control" value="5" min="1" max="30">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label for="sim-post">Post-Buffer (sec)</label>
+                            <input type="number" id="sim-post" class="form-control" value="5" min="1" max="60">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn" id="btn-start-txn" style="background: var(--color-low); box-shadow: 0 4px 12px var(--color-low-glow); margin-bottom: 16px;">▶ Start Transaction</button>
+
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 12px; margin-top: auto;">
+                        <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">2. End Transaction</div>
+                        
+                        <div class="form-group">
+                            <label for="sim-amount">Final Transaction Amount (₹)</label>
+                            <input type="number" id="sim-amount" class="form-control" value="6500" placeholder="Enter amount when ending transaction" required>
+                        </div>
+
+                        <button type="button" class="btn" id="btn-end-txn" style="background: var(--color-high); box-shadow: 0 4px 12px var(--color-high-glow); width: 100%;" disabled>⏹ End Transaction</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="glass-panel">
+                <h3 class="panel-title">Monitored Counters</h3>
+                <div class="counters-grid" id="counters-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 3: Alert Queue & Live View -->
+        <div class="sidebar" style="grid-column: 3;">
+            <div class="live-preview-box" id="live-streams-container">
+                <!-- Dynamically populated live streams -->
+            </div>
+            
+            <div class="glass-panel" style="padding: 16px; margin-bottom: 20px;">
+                <h4 style="margin-bottom: 6px; font-family: 'Outfit';">Active Camera Analytics</h4>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.4;">
+                    The Video Analytics System (VAS) runs continuous person detection on all active RTSP cameras.
+                    If a financial transaction is initiated at an empty counter, a high-priority risk alert is raised immediately.
+                </p>
+            </div>
+            </div>
+
+            <div class="glass-panel alert-queue-panel">
+                <h3 class="panel-title">Alert Triage Queue</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Staff</th>
+                                <th>Action Detail</th>
+                                <th>Risk level</th>
+                                <th>Counter</th>
+                                <th>Timestamp</th>
+                                <th>Verification</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alert-queue-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Escalations and Close Queue -->
+            <div class="glass-panel">
+                <h3 class="panel-title">Risk & Audit Escalation Queue</h3>
+                <div class="escalated-list" id="escalated-queue">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Investigation Modal -->
+    <div class="modal-overlay" id="investigate-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="btn-close-modal">&times;</button>
+            
+            <div class="modal-video-section">
+                <h3 style="margin-bottom: 16px; align-self: flex-start; font-family: 'Outfit';">CCTV Audit Evidence</h3>
+                <div class="video-container">
+                    <video id="modal-video-player" controls preload="auto" playsinline>
+                        <source id="video-source" src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="video-status-overlay" id="video-status-overlay">
+                        <div class="video-spinner"></div>
+                        <span id="video-status-text">Processing clip and running YOLO inference...</span>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted); width: 100%; text-align: left;">
+                    💡 The video buffer captures the counter's state including the configured pre-buffer and post-buffer frames around the transaction timestamp.
+                </div>
+            </div>
+
+            <div class="modal-info-section">
+                <div>
+                    <h3 class="modal-header-title" id="modal-title">Transaction Details</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;" id="modal-txn-id">Txn ID: -</p>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span>Staff ID</span>
+                        <strong id="detail-staff">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Counter Location</span>
+                        <strong id="detail-counter">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Module</span>
+                        <strong id="detail-module">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Action</span>
+                        <strong id="detail-action">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Original Risk</span>
+                        <span id="detail-risk-tag" class="badge">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <span>Camera Health</span>
+                        <strong id="detail-camera-health">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>YOLO Detection</span>
+                        <strong id="detail-yolo">-</strong>
+                    </div>
+                    <div class="detail-item">
+                        <span>Presence Ratio</span>
+                        <strong id="detail-presence">-</strong>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 8px; font-size: 14px; font-family: 'Outfit';">Audit Log Trail</h4>
+                    <div class="log-trail" id="modal-log-trail">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 8px; font-size: 14px; font-family: 'Outfit';">Auditor Notes & Remarks</h4>
+                    <textarea id="modal-remarks" class="form-control" rows="3" placeholder="Enter transaction analysis notes, correlation observations, or justification..." style="resize: none;"></textarea>
+                </div>
+
+                <div>
+                    <h4 style="margin-bottom: 8px; font-size: 14px; font-family: 'Outfit';">Select Action Outcome (Disposition)</h4>
+                    <div class="disposition-buttons">
+                        <button class="btn-disp clean" data-outcome="Verified-Clean">Verified Clean</button>
+                        <button class="btn-disp discrepancy" data-outcome="Verified-Discrepancy">Verified Discrepancy</button>
+                        <button class="btn-disp escalate" data-outcome="Escalated">Escalate to Risk</button>
+                    </div>
+                </div>
+
+                <button class="btn" id="btn-save-disposition" style="margin-top: 10px;">Save Review & Close Alert</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="system-toast">
+        <div style="font-weight: bold; font-family: 'Outfit';" id="toast-title">New Alert raised!</div>
+        <div style="font-size: 13px;" id="toast-desc">Transaction triggered at Empty Counter</div>
+    </div>
+
+    <script>
+        // --- Added for standalone frontend export ---
+        const storedUrl = localStorage.getItem('backendUrl');
+        const BACKEND_URL = prompt('Enter the Jetson Tailscale Backend URL (e.g., http://100.x.y.z:5000):', storedUrl || 'http://100.x.y.z:5000');
+        if (BACKEND_URL) {
+            localStorage.setItem('backendUrl', BACKEND_URL);
+        } else {
+            alert('Backend URL is required!');
+        }
+
+        // Global variables
+        let counters = [];
+        let alerts = [];
+        let selectedAlertId = null;
+        let selectedOutcome = null;
+        let activeTransactionId = null; // Track active transaction simulation
+
+        // Dom Elements
+        const simCounterSelect = document.getElementById('sim-counter');
+        const countersList = document.getElementById('counters-list');
+        const alertQueueBody = document.getElementById('alert-queue-body');
+        const escalatedQueue = document.getElementById('escalated-queue');
+        const clipsSidebarList = document.getElementById('clips-sidebar-list');
+        
+        const kpiHigh = document.getElementById('kpi-high');
+        const kpiMedium = document.getElementById('kpi-medium');
+        const kpiLow = document.getElementById('kpi-low');
+        const kpiGap = document.getElementById('kpi-gap');
+        const kpiTat = document.getElementById('kpi-tat');
+
+        const btnStartTxn = document.getElementById('btn-start-txn');
+        const btnEndTxn = document.getElementById('btn-end-txn');
+
+        const investigateModal = document.getElementById('investigate-modal');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const modalVideoPlayer = document.getElementById('modal-video-player');
+        const videoSource = document.getElementById('video-source');
+        const videoOverlay = document.getElementById('video-status-overlay');
+        const videoStatusText = document.getElementById('video-status-text');
+
+        const modalTitle = document.getElementById('modal-title');
+        const modalTxnId = document.getElementById('modal-txn-id');
+        const detailStaff = document.getElementById('detail-staff');
+        const detailCounter = document.getElementById('detail-counter');
+        const detailModule = document.getElementById('detail-module');
+        const detailAction = document.getElementById('detail-action');
+        const detailRiskTag = document.getElementById('detail-risk-tag');
+        const detailCameraHealth = document.getElementById('detail-camera-health');
+        const detailYolo = document.getElementById('detail-yolo');
+        const detailPresence = document.getElementById('detail-presence');
+        const modalLogTrail = document.getElementById('modal-log-trail');
+        const modalRemarks = document.getElementById('modal-remarks');
+        const btnSaveDisposition = document.getElementById('btn-save-disposition');
+        
+        const systemToast = document.getElementById('system-toast');
+        const toastTitle = document.getElementById('toast-title');
+        const toastDesc = document.getElementById('toast-desc');
+
+        // Initial setup
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchSystemData();
+            
+            // Set up start/end transaction button clicks
+            btnStartTxn.addEventListener('click', startTransactionSimulation);
+            btnEndTxn.addEventListener('click', endTransactionSimulation);
+            
+            // Set up modal close
+            btnCloseModal.addEventListener('click', closeModal);
+            
+            // Set up disposition buttons
+            document.querySelectorAll('.btn-disp').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.btn-disp').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedOutcome = btn.dataset.outcome;
+                });
+            });
+
+            btnSaveDisposition.addEventListener('click', saveDisposition);
+            
+            // Render live streams after initial fetch
+            renderLiveStreams();
+            
+            // Start polling for alerts and data updates
+            setInterval(fetchSystemData, 3000);
+        });
+
+        function renderLiveStreams() {
+            const container = document.getElementById('live-streams-container');
+            container.innerHTML = '';
+            
+            // Get unique active cameras
+            const uniqueCameras = [...new Set(counters.filter(c => c.health === 'Online').map(c => c.camera_id))];
+            
+            if (uniqueCameras.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; color: var(--text-muted);">No active cameras found.</div>';
+                return;
+            }
+            
+            uniqueCameras.forEach(camId => {
+                const card = document.createElement('div');
+                card.className = 'glass-panel live-stream-card';
+                // Adjust URL based on whether we are in standalone mode (BACKEND_URL exists) or running from backend natively
+                const baseUrl = typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : '';
+                card.innerHTML = `
+                    <div class="live-stream-overlay">
+                        <div class="status-dot"></div>
+                        ${camId} Live (RTSP)
+                    </div>
+                    <img class="dynamic-live-stream" src="${baseUrl}/api/v1/live-stream?camera_id=${camId}" alt="Live stream ${camId}">
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function showToast(title, desc, type) {
+            toastTitle.innerText = title;
+            toastDesc.innerText = desc;
+            systemToast.className = 'toast show ' + (type || 'low');
+            setTimeout(() => {
+                systemToast.classList.remove('show');
+            }, 4000);
+        }
+
+        function fetchSystemData() {
+            // Fetch Counters
+            fetch(BACKEND_URL + '/api/v1/counters')
+                .then(res => res.json())
+                .then(data => {
+                    const firstLoad = counters.length === 0;
+                    counters = data;
+                    renderCounters();
+                    if (firstLoad) renderLiveStreams();
+                });
+
+            // Fetch Alerts
+            fetch(BACKEND_URL + '/api/v1/alerts')
+                .then(res => res.json())
+                .then(data => {
+                    // Check if a new alert was raised to show toast
+                    if (alerts.length > 0 && data.length > alerts.length) {
+                        const newAlert = data[0]; 
+                        if (newAlert.risk_score === 'High') {
+                            showToast('🚨 High Risk Alert Triggered', `${newAlert.action_type} at ${newAlert.counter_id} by ${newAlert.staff_id}`, 'high');
+                        } else if (newAlert.flag === 'monitoring_gap') {
+                            showToast('⚠️ Monitoring Gap Detected', `Camera offline for transaction ${newAlert.transaction_id}`, 'gap');
+                        }
+                    }
+                    alerts = data;
+                    renderAlerts();
+                    renderClipsSidebar();
+                    updateKPIs();
+                    
+                    // If modal is open and video is processing, check if video is now ready
+                    if (selectedAlertId) {
+                        const activeAlert = alerts.find(a => a.id === selectedAlertId);
+                        if (activeAlert && activeAlert.recording_status === 'Ready' && videoOverlay.style.display !== 'none') {
+                            updateModalVideo(activeAlert);
+                        }
+                    }
+                });
+        }
+
+        function renderCounters() {
+            // Keep selected value
+            const currentSelection = simCounterSelect.value;
+            
+            // Build options
+            simCounterSelect.innerHTML = '';
+            counters.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.counter_id;
+                opt.innerText = `${c.counter_id} (${c.camera_id})`;
+                simCounterSelect.appendChild(opt);
+            });
+            
+            if (currentSelection) {
+                simCounterSelect.value = currentSelection;
+            }
+
+            // Build list cards
+            countersList.innerHTML = '';
+            counters.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'counter-card';
+                card.innerHTML = `
+                    <div class="counter-info">
+                        <div class="counter-name">${c.counter_id}</div>
+                        <div class="counter-camera">Camera: ${c.camera_id}</div>
+                    </div>
+                    <div class="counter-status">
+                        <span class="health-indicator ${c.health.toLowerCase()}">${c.health}</span>
+                        <button class="subscription-switch ${c.subscription ? 'active' : ''}" onclick="toggleSubscription('${c.counter_id}')">
+                            Sub: ${c.subscription ? 'Y' : 'N'}
+                        </button>
+                    </div>
+                `;
+                countersList.appendChild(card);
+            });
+        }
+
+        function toggleSubscription(counterId) {
+            const counter = counters.find(c => c.counter_id === counterId);
+            if (!counter) return;
+            
+            const newStatus = !counter.subscription;
+            
+            fetch(`/api/v1/counters/${counterId}/subscription`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ active: newStatus })
+            })
+            .then(res => res.json())
+            .then(() => {
+                fetchSystemData();
+            });
+        }
+
+        function renderAlerts() {
+            alertQueueBody.innerHTML = '';
+            // Render non-escalated alerts in main queue
+            const triageAlerts = alerts.filter(a => a.reviewer_status !== 'Escalated');
+            
+            if (triageAlerts.length === 0) {
+                alertQueueBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No alerts pending triage.</td></tr>`;
+            } else {
+                triageAlerts.forEach(a => {
+                    const tr = document.createElement('tr');
+                    
+                    let riskBadge = '';
+                    if (a.flag === 'monitoring_gap') {
+                        riskBadge = `<span class="badge gap">Monitoring Gap</span>`;
+                    } else {
+                        riskBadge = `<span class="badge ${a.risk_score.toLowerCase()}">${a.risk_score}</span>`;
+                    }
+
+                    let actionDetail = `${a.action_type}`;
+                    if (a.reviewer_remarks && a.reviewer_remarks.trim().length > 0) {
+                        actionDetail += `<div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">📝 ${a.reviewer_remarks}</div>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td><strong>${a.module}</strong></td>
+                        <td>${a.staff_id}</td>
+                        <td>${actionDetail}</td>
+                        <td>${riskBadge}</td>
+                        <td>${a.counter_id}</td>
+                        <td style="font-size: 12px; color: var(--text-muted);">${formatTimestamp(a.timestamp)}</td>
+                        <td>
+                            <span style="font-size: 12px; font-weight: 600; color: ${getReviewerColor(a.reviewer_status)}">${a.reviewer_status}</span>
+                        </td>
+                        <td>
+                            <button class="btn-table" onclick="openInvestigation(${a.id})">Investigate</button>
+                        </td>
+                    `;
+                    alertQueueBody.appendChild(tr);
+                });
+            }
+
+            // Render Escalations Panel
+            escalatedQueue.innerHTML = '';
+            const escalatedAlerts = alerts.filter(a => a.reviewer_status === 'Escalated');
+            
+            if (escalatedAlerts.length === 0) {
+                escalatedQueue.innerHTML = `<div style="text-align: center; font-size: 13px; color: var(--text-muted); padding: 10px;">No escalated cases currently active.</div>`;
+            } else {
+                escalatedAlerts.forEach(a => {
+                    const item = document.createElement('div');
+                    item.className = 'escalated-item';
+                    item.innerHTML = `
+                        <div class="escalated-info">
+                            <span class="escalated-status">Escalated</span>
+                            <strong>${a.action_type} - ${a.counter_id}</strong>
+                            <span style="font-size: 11px; color: var(--text-muted);">Staff: ${a.staff_id} | Triage Time: ${formatTimestamp(a.reviewer_time)}</span>
+                        </div>
+                        <button class="btn-table" onclick="openInvestigation(${a.id})">Review Case</button>
+                    `;
+                    escalatedQueue.appendChild(item);
+                });
+            }
+        }
+
+        // Render the Recorded Clips left sidebar
+        function renderClipsSidebar() {
+            clipsSidebarList.innerHTML = '';
+            
+            // Filter alerts that have video records (either recording, ready, processing or failed)
+            const alertsWithClips = alerts.filter(a => a.clip_id && a.clip_id.trim().length > 0);
+            
+            if (alertsWithClips.length === 0) {
+                clipsSidebarList.innerHTML = `<div style="text-align: center; font-size: 12px; color: var(--text-muted); padding: 20px;">No clips recorded yet.</div>`;
+                return;
+            }
+            
+            alertsWithClips.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'clip-card';
+                card.onclick = () => openInvestigation(a.id);
+                
+                let statusText = '';
+                let statusStyle = '';
+                
+                if (a.recording_status === 'Recording') {
+                    statusText = '🔴 Recording';
+                    statusStyle = 'color: var(--color-high); animation: pulse 1.5s infinite;';
+                } else if (a.recording_status === 'Processing') {
+                    statusText = '⚙️ Analyzing';
+                    statusStyle = 'color: var(--color-medium);';
+                } else if (a.recording_status === 'Ready') {
+                    statusText = a.person_present ? '🟢 Clean' : '🚨 Alert';
+                    statusStyle = a.person_present ? 'color: var(--color-low);' : 'color: var(--color-high); font-weight: bold;';
+                } else {
+                    statusText = '❌ Failed';
+                    statusStyle = 'color: var(--text-muted);';
+                }
+                
+                card.innerHTML = `
+                    <div class="clip-header">
+                        <span>ID: ${a.clip_id.substring(5, 13)}...</span>
+                        <span>${formatTimeOnly(a.timestamp)}</span>
+                    </div>
+                    <div class="clip-body">${a.counter_id}</div>
+                    <div class="clip-footer">
+                        <span style="font-size: 11px; color: var(--text-muted);">${a.action_type}</span>
+                        <span style="font-size: 12px; ${statusStyle}">${statusText}</span>
+                    </div>
+                `;
+                clipsSidebarList.appendChild(card);
+            });
+        }
+
+        function formatTimestamp(isoStr) {
+            if (!isoStr) return '-';
+            try {
+                const date = new Date(isoStr);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' ' + date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            } catch(e) {
+                return isoStr;
+            }
+        }
+
+        function formatTimeOnly(isoStr) {
+            if (!isoStr) return '-';
+            try {
+                const date = new Date(isoStr);
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            } catch(e) {
+                return isoStr;
+            }
+        }
+
+        function getReviewerColor(status) {
+            if (status === 'Verified-Clean') return '#10b981';
+            if (status === 'Verified-Discrepancy') return '#f59e0b';
+            if (status === 'Escalated') return '#ef4444';
+            return '#94a3b8';
+        }
+
+        function updateKPIs() {
+            // Count risk stats
+            const highCount = alerts.filter(a => a.risk_score === 'High' && a.flag !== 'monitoring_gap').length;
+            const mediumCount = alerts.filter(a => a.risk_score === 'Medium').length;
+            const lowCount = alerts.filter(a => a.risk_score === 'Low').length;
+            const gapCount = alerts.filter(a => a.flag === 'monitoring_gap').length;
+            
+            kpiHigh.innerText = highCount;
+            kpiMedium.innerText = mediumCount;
+            kpiLow.innerText = lowCount;
+            kpiGap.innerText = gapCount;
+
+            // Calculate Avg TAT
+            const verifiedAlerts = alerts.filter(a => a.reviewer_time && a.timestamp);
+            if (verifiedAlerts.length > 0) {
+                let totalTime = 0;
+                verifiedAlerts.forEach(a => {
+                    const start = new Date(a.timestamp);
+                    const end = new Date(a.reviewer_time);
+                    totalTime += (end - start) / 1000.0;
+                });
+                kpiTat.innerText = (totalTime / verifiedAlerts.length).toFixed(1) + 's';
+            } else {
+                kpiTat.innerText = '0.0s';
+            }
+        }
+
+        // Start Transaction Simulation
+        function startTransactionSimulation() {
+            btnStartTxn.disabled = true;
+            btnStartTxn.innerText = 'Starting...';
+
+            const payload = {
+                staff_id: document.getElementById('sim-staff').value,
+                counter_id: document.getElementById('sim-counter').value,
+                module: document.getElementById('sim-module').value,
+                action_type: document.getElementById('sim-action').value,
+                subscription: document.getElementById('sim-subscription').value,
+                pre_buffer_sec: parseInt(document.getElementById('sim-pre').value),
+                post_buffer_sec: parseInt(document.getElementById('sim-post').value)
+            };
+
+            fetch(BACKEND_URL + '/api/v1/transaction/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'recording_started') {
+                    activeTransactionId = data.transaction_id;
+                    btnEndTxn.disabled = false;
+                    btnStartTxn.innerText = 'Started';
+                    showToast('🔴 Recording Started', `Recording transaction ${activeTransactionId} at empty counter.`, 'high');
+                } else if (data.status === 'logged_only') {
+                    activeTransactionId = null;
+                    btnStartTxn.disabled = false;
+                    btnStartTxn.innerText = 'Start';
+                    showToast('Logged (Sub=N)', 'Transaction logged in database, no video captured.', 'low');
+                } else if (data.status === 'monitoring_gap') {
+                    activeTransactionId = null;
+                    btnStartTxn.disabled = false;
+                    btnStartTxn.innerText = 'Start';
+                    showToast('⚠️ Monitoring Gap', 'Camera offline. Raised gap alert.', 'gap');
+                }
+                fetchSystemData();
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Error', 'Failed to start transaction simulation.', 'high');
+                btnStartTxn.disabled = false;
+                btnStartTxn.innerText = 'Start';
+            });
+        }
+
+        // End Transaction Simulation
+        function endTransactionSimulation() {
+            if (!activeTransactionId) {
+                alert('No active transaction to stop.');
+                return;
+            }
+
+            btnEndTxn.disabled = true;
+            btnEndTxn.innerText = 'Stopping...';
+
+            const amountVal = parseFloat(document.getElementById('sim-amount').value) || 0;
+
+            fetch(BACKEND_URL + '/api/v1/transaction/end', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transaction_id: activeTransactionId,
+                    amount: amountVal
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                showToast('⚙️ Analysis Triggered', `Finalizing clip for ${activeTransactionId} (Amount: ₹${amountVal}) and running YOLO.`, 'low');
+                activeTransactionId = null;
+                btnStartTxn.disabled = false;
+                btnStartTxn.innerText = 'Start';
+                btnEndTxn.innerText = 'End';
+                fetchSystemData();
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Error', 'Failed to end transaction simulation.', 'high');
+                btnEndTxn.disabled = false;
+                btnEndTxn.innerText = 'End';
+            });
+        }
+
+        function openInvestigation(alertId) {
+            selectedAlertId = alertId;
+            const alert = alerts.find(a => a.id === alertId);
+            if (!alert) return;
+
+            modalTitle.innerText = `${alert.action_type} Investigation`;
+            modalTxnId.innerText = `Transaction ID: ${alert.transaction_id}`;
+            detailStaff.innerText = alert.staff_id;
+            detailCounter.innerText = alert.counter_id;
+            detailModule.innerText = alert.module;
+            detailAction.innerText = `${alert.action_type} (₹${alert.amount})`;
+            
+            detailRiskTag.className = 'badge ' + (alert.flag === 'monitoring_gap' ? 'gap' : alert.risk_score.toLowerCase());
+            detailRiskTag.innerText = alert.flag === 'monitoring_gap' ? 'Monitoring Gap' : alert.risk_score;
+            
+            detailCameraHealth.innerText = alert.camera_health;
+
+            // Remarks and outcome buttons
+            modalRemarks.value = alert.reviewer_remarks || '';
+            selectedOutcome = alert.reviewer_status;
+            
+            document.querySelectorAll('.btn-disp').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.outcome === alert.reviewer_status) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Audit logs
+            modalLogTrail.innerHTML = '';
+            const logs = alert.audit_logs ? JSON.parse(alert.audit_logs) : [];
+            logs.forEach(l => {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                entry.innerHTML = `<span>[${l.time}]</span> ${l.msg}`;
+                modalLogTrail.appendChild(entry);
+            });
+
+            // Video setups
+            updateModalVideo(alert);
+
+            investigateModal.style.display = 'flex';
+        }
+
+        function updateModalVideo(alert) {
+            modalVideoPlayer.pause();
+            
+            if (alert.flag === 'monitoring_gap' || alert.camera_health === 'offline') {
+                videoOverlay.style.display = 'flex';
+                document.querySelector('.video-spinner').style.display = 'none';
+                videoStatusText.innerText = '⚠️ Video clip unavailable: Camera offline / Monitoring Gap';
+                modalVideoPlayer.style.display = 'none';
+                
+                detailYolo.innerText = 'N/A';
+                detailPresence.innerText = 'N/A';
+            } else if (alert.recording_status === 'Recording' || alert.recording_status === 'Processing') {
+                videoOverlay.style.display = 'flex';
+                document.querySelector('.video-spinner').style.display = 'block';
+                videoStatusText.innerText = `Inference Node: Capturing buffers / YOLO Running (${alert.recording_status})...`;
+                modalVideoPlayer.style.display = 'none';
+                
+                detailYolo.innerText = 'Analyzing...';
+                detailPresence.innerText = 'Analyzing...';
+            } else if (alert.recording_status === 'Ready' && alert.clip_url) {
+                videoOverlay.style.display = 'none';
+                modalVideoPlayer.style.display = 'block';
+                
+                // Set source
+                videoSource.src = BACKEND_URL + alert.clip_url;
+                modalVideoPlayer.load();
+                
+                detailYolo.innerText = alert.person_present ? `Person Present (x${alert.person_count})` : 'Counter Empty (No Person)';
+                detailPresence.innerText = alert.presence_duration_sec ? `${((alert.presence_duration_sec / alert.clip_duration_sec) * 100).toFixed(0)}% duration` : '0% duration';
+            } else {
+                videoOverlay.style.display = 'flex';
+                document.querySelector('.video-spinner').style.display = 'none';
+                videoStatusText.innerText = '❌ Failed to process video recording clip.';
+                modalVideoPlayer.style.display = 'none';
+                
+                detailYolo.innerText = 'Error';
+                detailPresence.innerText = 'Error';
+            }
+        }
+
+        function closeModal() {
+            modalVideoPlayer.pause();
+            investigateModal.style.display = 'none';
+            selectedAlertId = null;
+            selectedOutcome = null;
+        }
+
+        function saveDisposition() {
+            if (!selectedAlertId) return;
+            if (!selectedOutcome || selectedOutcome === 'Pending') {
+                alert('Please select an action outcome (disposition) first.');
+                return;
+            }
+
+            const payload = {
+                remarks: modalRemarks.value,
+                outcome: selectedOutcome
+            };
+
+            fetch(`/api/v1/alerts/${selectedAlertId}/disposition`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                showToast('Disposition Saved', 'Successfully updated audit case verification status.', 'low');
+                closeModal();
+                fetchSystemData();
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Error', 'Failed to save case disposition.', 'high');
+            });
+        }
+    </script>
+</body>
+</html>
